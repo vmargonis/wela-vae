@@ -1,0 +1,10 @@
+[tool.black]
+line-length = 88
+target-version = ['py39']
+extend-exclude = [".venv/*"]
+
+[tool.isort]
+py_version = 39
+line_length = 88
+profile = "black"
+extend_skip_glob = [".venv/*"]

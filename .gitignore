@@ -1,0 +1,10 @@
+.idea
+.git
+
+**/__pycache__/
+*.py[cod]
+.ipynb_checkpoints
+
+models/
+results/
+logs/*

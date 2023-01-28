@@ -1,0 +1,44 @@
+train:
+  epochs: 200
+  batch_size: 16
+  optimizer:
+    learning_rate: 0.001
+    type: Adam  # Adagrad, RMSprop, SGD
+
+vae:
+  initial_dim: 4096  # this is fixed for the blob dataset
+  latent_dim: 5  # number of latent dimensions
+  label_dim: 3  # for WeLa variants: available [2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+  weight_seed: 54  # weight initialization random seed
+  is_binary_input: false  # change to true only if input is valued in binary
+  output_dist: bernoulli  # another choice is gaussian
+
+  encoder:  # layer units and respective activations, i.e. [64, relu] -> [32, relu]
+    units:
+    - 64
+    - 32
+    activation:
+    - relu
+    - relu
+    output_activation: linear  # activation of the mean and log_var layers.
+
+  decoder:
+    units:
+    - 32
+    - 64
+    activation:
+    - relu
+    - relu
+    output_activation: sigmoid
+
+  beta: 40  # will be used in betavae and tcvae, and their WeLa variants
+  gamma: 1500  # will be used by WeLa variants - label reconstruction weight in loss
+
+  # dip-vae parameters
+  dip_vae_type: i  # choose either i or ii
+  lambda_off_diag: 200
+  lambda_diag: 1000
+
+# NOTES: good parameters
+# tcvae: latent_dim = 5, beta = 40, weight_seed = [3, 54]

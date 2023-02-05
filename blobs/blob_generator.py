@@ -42,8 +42,7 @@ def embed_image_in_canvas(
         pos_y: int,
 ) -> np.array:
 
-    """
-    Function that places a square image inside a black canvas of specified size.
+    """Function that places a square image inside a black canvas of specified size.
     (pos_x, pos_y) references the center of the source image in the canvas.
     Source image must be of odd dimensions.
     """
@@ -61,7 +60,7 @@ def embed_image_in_canvas(
     return out
 
 
-# SAVE A BLOB EXAMPLE 64x64 AS IMAGE
+# Plot a blob example
 example = embed_image_in_canvas(BLOB, 64, 15, 15)
 plt.figure(figsize=(5, 5))
 plt.imshow(example, cmap='gray')
@@ -79,7 +78,7 @@ for x in tqdm(range(IMAGE_SIZE)):
     for y in range(IMAGE_SIZE):
 
         blobset64[num, :, :] = embed_image_in_canvas(BLOB, IMAGE_SIZE, x, y)
-        ground_truth_factors[num, :] = np.array([x, y])  # ground truth factors: (pos_x, pos_y)
+        ground_truth_factors[num, :] = np.array([x, y])
         num += 1
 
 np.savez_compressed(f'{DATA_PATH}/blobs64', blobset64)
@@ -103,20 +102,16 @@ for label_resolution in tqdm(range(2, 11)):
     for x in range(IMAGE_SIZE):
         for y in range(IMAGE_SIZE):
 
-            # create angle labels
             phi = np.arctan2(y, x)  # angle from upper-left corner
             dis = np.sqrt(x**2 + y**2)  # distance from upper-left corner
 
             for k in range(label_resolution):
 
-                # angle label (one-hot)
-                if k * angle_step < phi <= (k + 1) * angle_step:
+                if k * angle_step < phi <= (k+1) * angle_step:
                     angle_labels[num, k] = 1
 
-                # distance label (one-hot)
-                if k * distance_step < dis <= (k + 1) * distance_step:
+                if k * distance_step < dis <= (k+1) * distance_step:
                     distance_labels[num, k] = 1
-
             num += 1
 
     # small correction: assign to label 0 when k=0 and k * angle_step = phi

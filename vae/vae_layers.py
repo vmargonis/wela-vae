@@ -1,13 +1,13 @@
 from keras.models import Model
 from keras.layers import Dense, Input, Lambda
-from vae.utils import reparam_trick
+from vae.utils import reparameterization_trick
 
 
 def reparameterize(config):
     mean = Input(shape=(config['latent_dim'],))
     log_var = Input(shape=(config['latent_dim'],))
 
-    z = Lambda(reparam_trick,
+    z = Lambda(reparameterization_trick,
                output_shape=(config['latent_dim'],),
                name='Z')([mean, log_var])
 

@@ -2,33 +2,43 @@ from keras import backend as K
 from keras.optimizers import Adagrad, RMSprop, Adam, SGD
 
 
-# Reparameterazation trick
-def reparam_trick(args):
-    """
-    Reparameterization trick
-    :param args: means, log_vars. tensors of shape (batch_size, latent_dim)
-    :return: z = mu + eps*sigma, eps~N(0,1), shape (batch_size, latent_dim)
-    """
-    mean, log_var = args
-    n_samples = K.shape(mean)[0]  # num. of samples in batch
-    n_features = K.shape(mean)[1]  # dimension of dataset
+def reparameterization_trick(args):
+    """Reparameterization trick:  z = mu + eps*sigma, eps~N(0,1)
 
-    epsilon = K.random_normal(shape=(n_samples, n_features))
-    z = mean + K.exp(0.5 * log_var) * epsilon
-    return z
+    Parameters
+    ----------
+    args : list
+        list = [means, log_vars], tensors of shape (batch_size, latent_dim)
+
+    Returns
+    -------
+    tf.Tensor
+        Gaussian samples, z = mu + eps*sigma, eps~N(0,1),
+        tensor of shape (batch_size, latent_dim).
+    """
+    means, log_vars = args
+
+    white_noise = K.random_normal(
+        shape=(K.shape(means)[0], K.shape(means)[1])
+    )
+
+    return means + K.exp(0.5 * log_vars) * white_noise
 
 
 def add_optimizer(config):
-    lr = config['optimizer']['learning_rate']  # learning rate
+    """Optimizer selector."""
+
+    learning_rate = config['optimizer']['learning_rate']
 
     if config['optimizer']['type'] == 'Adagrad':
-        optimizer = Adagrad(lr=lr)
+        optimizer = Adagrad(lr=learning_rate)
     elif config['optimizer']['type'] == 'Adam':
-        optimizer = Adam(lr=lr)
+        optimizer = Adam(lr=learning_rate)
     elif config['optimizer']['type'] == 'RMSprop':
-        optimizer = RMSprop(lr=lr)
+        optimizer = RMSprop(lr=learning_rate)
     elif config['optimizer']['type'] == 'SGD':
-        optimizer = SGD(lr=lr)
+        optimizer = SGD(lr=learning_rate)
     else:
         raise NotImplementedError("Optimizer not supported.")
+
     return optimizer

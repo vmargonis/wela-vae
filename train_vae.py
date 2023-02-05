@@ -1,5 +1,5 @@
 import numpy as np
-import tensorflow as tf
+# import tensorflow as tf
 import matplotlib.pyplot as plt
 import seaborn as sns
 from keras import backend as K
@@ -9,11 +9,6 @@ from os.path import exists
 from os import mkdir
 # import keras
 
-# Session settings to avoid pre allocating all the GPU memory
-config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
-sess = tf.Session(config=config)
-K.set_session(sess)
 
 out_dir = "blobs/results"
 if not exists(out_dir):

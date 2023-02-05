@@ -144,7 +144,7 @@ def compute_covariance_z(
     covariance_means = compute_covariance_mean(means)  # shape:(L,L)
     # E[Cov]
     mean_sigma_squared = K.mean(K.exp(log_vars), axis=0)  # shape:(L,)
-    expected_covariance = tf.matrix_diag(mean_sigma_squared)  # shape:(L,L)
+    expected_covariance = tf.linalg.diag(mean_sigma_squared)  # shape:(L,L)
 
     return expected_covariance + covariance_means
 
@@ -171,8 +171,8 @@ def dip_vae_regularizer(
         DIP regularizer, tensor of size ().
     """
 
-    cov_matrix_diagonal = tf.diag_part(cov_matrix)  # shape:(L,)
-    cov_matrix_off_diagonal = cov_matrix - tf.diag(cov_matrix_diagonal)
+    cov_matrix_diagonal = tf.linalg.diag_part(cov_matrix)  # shape:(L,)
+    cov_matrix_off_diagonal = cov_matrix - tf.linalg.diag(cov_matrix_diagonal)
 
     off_diag_penalty = lambda_off_diagonal * K.sum(cov_matrix_off_diagonal ** 2)
     diag_penalty = lambda_diagonal * K.sum((cov_matrix_diagonal - 1) ** 2)

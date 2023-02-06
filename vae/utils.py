@@ -7,8 +7,8 @@ def reparameterization_trick(args):
 
     Parameters
     ----------
-    args : list
-        list = [means, log_vars], tensors of shape (batch_size, latent_dim)
+    args : tf.Tensor, tf.Tensor
+        [means, log_vars], tensors of shape (batch_size, latent_dim)
 
     Returns
     -------
@@ -16,6 +16,7 @@ def reparameterization_trick(args):
         Gaussian samples, z = mu + eps*sigma, eps~N(0,1),
         tensor of shape (batch_size, latent_dim).
     """
+
     means, log_vars = args
 
     white_noise = K.random_normal(
@@ -31,13 +32,13 @@ def add_optimizer(config):
     learning_rate = config['optimizer']['learning_rate']
 
     if config['optimizer']['type'] == 'Adagrad':
-        optimizer = Adagrad(lr=learning_rate)
+        optimizer = Adagrad(learning_rate=learning_rate)
     elif config['optimizer']['type'] == 'Adam':
-        optimizer = Adam(lr=learning_rate)
+        optimizer = Adam(learning_rate=learning_rate)
     elif config['optimizer']['type'] == 'RMSprop':
-        optimizer = RMSprop(lr=learning_rate)
+        optimizer = RMSprop(learning_rate=learning_rate)
     elif config['optimizer']['type'] == 'SGD':
-        optimizer = SGD(lr=learning_rate)
+        optimizer = SGD(learning_rate=learning_rate)
     else:
         raise NotImplementedError("Optimizer not supported.")
 

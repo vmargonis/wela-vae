@@ -55,7 +55,10 @@ def bernoulli_loss(
         xent_lower_bound = 0
     else:
         original_clipped = K.clip(original, 1e-7, 1 - 1e-7)  # clip for stability
-        xent_lower_bound = - K.sum(original_clipped * K.log(original_clipped), axis=-1)  # shape:(?,)
+        xent_lower_bound = - K.sum(
+            original_clipped * K.log(original_clipped),
+            axis=-1,
+        )  # shape:(?,)
 
     reconstruction_clipped = K.clip(reconstruction, 1e-7, 1 - 1e-7)  # clip for stability
     # cross-entropy
@@ -183,7 +186,7 @@ def dip_vae_regularizer(
 def gaussian_log_density(
         z: tf.Tensor,
         means: tf.Tensor,
-        log_vars: tf.Tensor
+        log_vars: tf.Tensor,
 ) -> tf.Tensor:
     """Computes element-wise Gaussian log density.
     Uses log(q(z)) = -0.5 * (log(2pi) + log(sigma^2) + (z-mu)^2 * sigma^(-2))
@@ -211,7 +214,7 @@ def gaussian_log_density(
 def total_correlation(
         z: tf.Tensor,
         means: tf.Tensor,
-        log_vars: tf.Tensor
+        log_vars: tf.Tensor,
 ) -> tf.Tensor:
     """Estimation of total correlation on a batch.
     We need to compute the expectation over a batch of:

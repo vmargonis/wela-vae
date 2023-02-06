@@ -4,23 +4,14 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from keras import backend as K
 from evaluation.visualize import quality
-from vae.vae_models import TCVae
+from vae.vae_models import TCVAE
 from os.path import exists
 from os import mkdir
-# import keras
 
+for res_dir in ["results/models", "results/repres", "results/history"]:
+    if not exists(res_dir):
+        mkdir(res_dir)
 
-out_dir = "blobs/results"
-if not exists(out_dir):
-    mkdir(out_dir)
-
-out_dir = "blobs/models"
-if not exists(out_dir):
-    mkdir(out_dir)
-
-out_dir = "blobs/repres"
-if not exists(out_dir):
-    mkdir(out_dir)
 
 # LOAD BLOBS DATA SETS
 dataset_zip = np.load('blobs/data/blobs64.npz')
@@ -42,31 +33,45 @@ permuted_idx = np.random.permutation(len(blobs))
 x_train = blobs_flat[permuted_idx]
 print('training shape:', x_train.shape)
 
+FIG_SIZES = {
+    2: (15, 5),
+    5: (15, 8.75),
+    10: (15, 15)
+}
+
 # Parameters
 num_samples, initial_dim = x_train.shape
 latent_dim = 5
-num_epochs = 150
-batch_size = 256
-fig_size = (15, 8.75)  # (15, 15) for L=10, (15, 5) for L=2, (15, 8.75) for L=5
+num_epochs = 100
+batch_size = 64
+fig_size = FIG_SIZES[latent_dim]
 
-vae_config = {'random_seed': SEED,
-              'initial_dim': initial_dim,
-              'latent_dim': latent_dim,
-              'IsBinaryInput': False,
-              'output_dist': 'bernoulli',
-              'encoder': {'units': [1200, 1200],
-                          'activation': ['tanh', 'tanh'],
-                          'output_activation': 'linear'},
-              'decoder': {'units': [1200, 1200],
-                          'activation': ['tanh', 'tanh'],
-                          'output_activation': 'sigmoid'},
-              'optimizer': {'type': 'Adam',
-                            'learning_rate': 1e-04}}
+vae_config = {
+    'random_seed': SEED,
+    'initial_dim': initial_dim,
+    'latent_dim': latent_dim,
+    'IsBinaryInput': False,
+    'output_dist': 'bernoulli',
+    'encoder': {
+        'units': [512, 64],
+        'activation': ['relu', 'relu'],
+        'output_activation': 'linear'
+    },
+    'decoder': {
+        'units': [512, 64],
+        'activation': ['relu', 'relu'],
+        'output_activation': 'sigmoid',
+    },
+    'optimizer': {
+        'type': 'Adam',
+        'learning_rate': 1e-04
+    },
+}
 
 dip_vae_type = 'ii'
 # model = 'dipvae_{}'.format(dip_vae_type)
 model = 'tcvae'  # betavae
-fig_dir = "blobs/results/unsupervised/{}".format(model)
+fig_dir = f"results/vae/{model}"
 if not exists(fig_dir):
     mkdir(fig_dir)
 
@@ -77,10 +82,8 @@ if not exists(fig_dir):
 
 
 betas = [40]
-# seeds = [1, 2, 3, 4, 5, 6, 7, 9, 11, 12, 34, 54]
-seeds_0 = list(range(1, 26))
-seeds_1 = list(range(26, 51))
-for SEED in seeds_1:
+weight_init_seeds = [4]  # list(range(1, 26))
+for weight_seed in weight_init_seeds:
     for beta in betas:
         # print("Progress: lambda_od={}, multiplier={}, seed={}".format(
         #     lambda_od,
@@ -96,20 +99,20 @@ for SEED in seeds_1:
         # st = '{}_L{}_lod{}_ld{}_seed{}'.format(model, latent_dim,
         #                                        lambda_od, lambda_d, SEED)
 
-        vae_config['random_seed'] = SEED
+        vae_config['random_seed'] = weight_seed
         params = {"beta": beta}
-        vae = TCVae(vae_config, params)
-        st = '{}_L{}_b{}_seed{}'.format(model, latent_dim, beta, SEED)
+        vae = TCVAE(vae_config, params)
+        st = f"{model}_L{latent_dim}_b{beta}_seed{weight_seed}"
 
         # TRAINING
         try:
-            # logdir = "logs/" + st
-            # callback = keras.callbacks.TensorBoard(log_dir=logdir)
-            history = vae.vae.fit(x_train, None,
-                                  epochs=num_epochs,
-                                  batch_size=batch_size,
-                                  shuffle=False)
-            # callbacks=[tensorboard_callback])
+            history = vae.vae.fit(
+                x_train,
+                None,
+                epochs=num_epochs,
+                batch_size=batch_size,
+                shuffle=False,
+            )
 
             sns.set_style("white")
             plt.figure(figsize=(10, 7))
@@ -117,7 +120,7 @@ for SEED in seeds_1:
             plt.title(st)
             plt.ylabel("Loss")
             plt.xlabel("Epoch")
-            plt.savefig("blobs/results/hist/hist_{}".format(st))
+            plt.savefig(f"results/history/hist_{st}")
 
         except KeyboardInterrupt:
             print("Training interrupted.")
@@ -127,24 +130,33 @@ for SEED in seeds_1:
             print('means shape:', means.shape)
             print('log_vars shape:', log_vars.shape)
 
-            quality(dataset=blobs_flat, mean_vec=means,
-                    log_var_vec=log_vars,
-                    decode_model=vae.decoder, n_cols=10, image_res=64,
-                    a=-3, b=3,
-                    seed=12, out_dir=fig_dir, save_str=st,
-                    fig_size=fig_size)
+            quality(
+                dataset=blobs_flat,
+                mean_vec=means,
+                log_var_vec=log_vars,
+                decode_model=vae.decoder,
+                n_cols=10,
+                image_res=64,
+                a=-3,
+                b=3,
+                seed=12,
+                out_dir=fig_dir,
+                save_str=st,
+                fig_size=fig_size
+            )
+
             print("Saved qualitative evaluation figure.")
 
             # SAVE REPRESENTATIONS AND LOG VARS
-            means_str = 'blobs/repres/means_{}.npz'.format(st)
-            log_vars_str = 'blobs/repres/log_vars_{}.npz'.format(st)
+            means_str = f'results/repres/means_{st}.npz'
+            log_vars_str = f'results/repres/log_vars_{st}.npz'
             np.savez_compressed(means_str, means)
             np.savez_compressed(log_vars_str, log_vars)
             print("Saved representations and log_vars.")
 
             # SAVE MODELS
-            enc_str = 'blobs/models/blob_enc_{}.h5'.format(st)
-            dec_str = 'blobs/models/blob_dec_{}.h5'.format(st)
+            enc_str = f'results/models/blob_enc_{st}.h5'
+            dec_str = f'results/models/blob_dec_{st}.h5'
             vae.encoder.save(enc_str)
             vae.decoder.save(dec_str)
             print("Saved models to disk")

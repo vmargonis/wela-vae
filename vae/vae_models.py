@@ -5,7 +5,7 @@ from vae.losses import *
 from vae.utils import add_optimizer
 
 
-class BetaVae:
+class BetaVAE:
     # Constructor / Build topology
     # Args: config: dictionary of betavae configuration
     def __init__(self, config, params):
@@ -22,13 +22,9 @@ class BetaVae:
             self._out = self.decoder(self.reparam(self.encoder(self._in)))
             self.vae = Model(self._in, self._out)
 
-            # ADD LOSS
-            loss = self.beta_vae_loss(config, params)
-            self.vae.add_loss(loss)
-
-            # ADD OPTIMIZER
-            opt = add_optimizer(config)
-            self.vae.compile(optimizer=opt)
+            # Add Loss / Optimizer
+            self.vae.add_loss(self.beta_vae_loss(config, params))
+            self.vae.compile(optimizer=add_optimizer(config))
 
         except KeyError:
             raise KeyError
@@ -39,8 +35,11 @@ class BetaVae:
 
         # RECONSTRUCTION LOSS
         if config['output_dist'] == 'bernoulli':
-            recon_loss = bernoulli_loss(self._in, self._out,
-                                        config['IsBinaryInput'])
+            recon_loss = bernoulli_loss(
+                self._in,
+                self._out,
+                config['IsBinaryInput'],
+            )
         elif config['output_dist'] == 'gaussian':
             recon_loss = gaussian_loss(self._in, self._out)
         else:
@@ -51,7 +50,7 @@ class BetaVae:
         return batch_loss
 
 
-class TCVae:
+class TCVAE:
     # Constructor / Build topology
     # Args: config: dictionary of betavae configuration
     def __init__(self, config, params):
@@ -71,13 +70,9 @@ class TCVae:
             self._out = self.decoder(self.z)
             self.vae = Model(self._in, self._out)
 
-            # ADD LOSS
-            loss = self.tcvae_loss(config, params)
-            self.vae.add_loss(loss)
-
-            # ADD OPTIMIZER
-            opt = add_optimizer(config)
-            self.vae.compile(optimizer=opt)
+            # Add Loss / Optimizer
+            self.vae.add_loss(self.tcvae_loss(config, params))
+            self.vae.compile(optimizer=add_optimizer(config))
 
         except KeyError:
             raise KeyError
@@ -107,7 +102,7 @@ class TCVae:
         return batch_loss
 
 
-class DIPVae:
+class DIPVAE:
 
     def __init__(self, config, params):
         try:
@@ -123,18 +118,15 @@ class DIPVae:
             self._out = self.decoder(self.reparam(self.encoder(self._in)))
             self.vae = Model(self._in, self._out)
 
-            # ADD LOSS
-            loss = self.dip_vae_loss(config, params)
-            self.vae.add_loss(loss)
-
-            # ADD OPTIMIZER
-            opt = add_optimizer(config)
-            self.vae.compile(optimizer=opt)
+            # Add Loss / Optimizer
+            self.vae.add_loss(self.dip_vae_loss(config, params))
+            self.vae.compile(optimizer=add_optimizer(config))
 
         except KeyError:
             raise KeyError
 
     def dip_vae_loss(self, config, params):
+
         # KL DIVERGENCE
         kl = kl_divergence(self.mean, self.log_var)
 
@@ -143,15 +135,12 @@ class DIPVae:
             recon_loss = bernoulli_loss(
                 self._in,
                 self._out,
-                config['IsBinaryInput']
+                config['IsBinaryInput'],
             )
         elif config['output_dist'] == 'gaussian':
             recon_loss = gaussian_loss(self._in, self._out)
         else:
             raise NotImplementedError("Loss not supported.")
-
-        # ELBO
-        elbo = kl + recon_loss
 
         # DIP VAE REGULARIZATION
         if params['dip_vae_type'] == 'i':
@@ -164,35 +153,7 @@ class DIPVae:
         regularizer = dip_vae_regularizer(
             cov_matrix,
             params['lambda_od'],
-            params['lambda_d']
+            params['lambda_d'],
         )
 
-        batch_loss = elbo + regularizer  # shape:()
-        return batch_loss
-
-############################################################
-# EXAMPLES
-############################################################
-
-# vae_config = {'random_seed': SEED,
-#               'initial_dim': initial_dim,
-#               'latent_dim': latent_dim,
-#               'IsBinaryInput': True,
-#               'output_dist': 'bernoulli',
-#               'encoder': {'units': [1200, 1200],
-#                           'activation': ['tanh', 'tanh'],
-#                           'output_activation': 'linear'},
-#               'decoder': {'units': [1200, 1200],
-#                           'activation': ['tanh', 'tanh'],
-#                           'output_activation': 'sigmoid'},
-#               'optimizer': {'type': 'Adam',
-#                             'learning_rate': 0.001}
-#                }
-#
-# params = {'beta': beta}
-# vae = BetaVae(vae_config, params)
-#
-# params = {'dip_vae_type': 'i',
-#           'lambda_od': 100,
-#           'lambda_d': 200}
-# vae = DIPVae(vae_config, params)
+        return kl + recon_loss + regularizer

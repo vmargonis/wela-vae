@@ -97,7 +97,7 @@ def quality(dataset, mean_vec, log_var_vec, decode_model,
     sorted_idx = np.argsort(mean_variances)
 
     # PICK late_dim random images:
-    idx_2 = np.array(late_dim * [15])
+    idx_2 = np.array(late_dim * [2048])
     # idx_2 = np.random.choice(num_samples, late_dim)
     originals = dataset[idx_2]
     representations = mean_vec[idx_2]

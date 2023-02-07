@@ -1,5 +1,6 @@
 from keras import backend as K
 from keras.optimizers import Adagrad, RMSprop, Adam, SGD
+from vae.losses import gaussian_loss, bernoulli_loss
 
 
 def reparameterization_trick(args):
@@ -8,7 +9,7 @@ def reparameterization_trick(args):
     Parameters
     ----------
     args : tf.Tensor, tf.Tensor
-        [means, log_vars], tensors of shape (batch_size, latent_dim)
+        [mean, log_var], tensors of shape (batch_size, latent_dim)
 
     Returns
     -------
@@ -17,13 +18,32 @@ def reparameterization_trick(args):
         tensor of shape (batch_size, latent_dim).
     """
 
-    means, log_vars = args
+    mean, log_var = args
 
     white_noise = K.random_normal(
-        shape=(K.shape(means)[0], K.shape(means)[1])
+        shape=(K.shape(mean)[0], K.shape(mean)[1])
     )
 
-    return means + K.exp(0.5 * log_vars) * white_noise
+    return mean + K.exp(0.5 * log_var) * white_noise
+
+
+def get_reconstruction_loss(input_vec, output_vec, config):
+    """Get recostruction loss based on I/O and config."""
+
+    if config["output_dist"] == "bernoulli":
+        reconstruction_loss = bernoulli_loss(
+            input_vec,
+            output_vec,
+            config["is_binary_input"],
+        )
+
+    elif config["output_dist"] == "gaussian":
+        reconstruction_loss = gaussian_loss(input_vec, output_vec)
+
+    else:
+        raise NotImplementedError("Loss not supported.")
+
+    return reconstruction_loss
 
 
 def add_optimizer(config):

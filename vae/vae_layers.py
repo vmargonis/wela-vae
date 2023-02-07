@@ -6,16 +6,16 @@ from vae.utils import reparameterization_trick
 def reparameterize(config):
 
     means = Input(shape=(config['latent_dim'],))
-    log_vars = Input(shape=(config['latent_dim'],))
+    log_var = Input(shape=(config['latent_dim'],))
 
     z = Lambda(
         reparameterization_trick,
         output_shape=(config['latent_dim'],),
         name='Z'
-    )([means, log_vars])
+    )([means, log_var])
 
     reparam = Model(
-        inputs=[means, log_vars],
+        inputs=[means, log_var],
         outputs=z,
         name='reparameterize'
     )

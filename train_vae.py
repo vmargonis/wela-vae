@@ -1,37 +1,35 @@
 import numpy as np
-# import tensorflow as tf
+import tensorflow as tf
 import matplotlib.pyplot as plt
 import seaborn as sns
 from keras import backend as K
 from evaluation.visualize import quality
 from vae.vae_models import TCVAE
+
+import os
+import random
 from os.path import exists
 from os import mkdir
+
+# SET RANDOM SEEDS
+SEED = 12
+os.environ['PYTHONHASHSEED'] = str(SEED)
+random.seed(SEED)
+np.random.seed(SEED)
+tf.random.set_seed(SEED)
 
 for res_dir in ["results/models", "results/repres", "results/history"]:
     if not exists(res_dir):
         mkdir(res_dir)
-
 
 # LOAD BLOBS DATA SETS
 dataset_zip = np.load('blobs/data/blobs64.npz')
 blobs = dataset_zip['arr_0']
 print('blobs shape:', blobs.shape)
 
-# Flatten blobs
-blobs_flat = blobs.reshape((len(blobs), np.prod(blobs.shape[1:])))
-print('blobs_flat shape:', blobs_flat.shape)
-
-# random permutation of dsprites data set
-SEED = 12
-np.random.seed(SEED)
-
-# random permutation of blobs data set
-permuted_idx = np.random.permutation(len(blobs))
-
-# training set
-x_train = blobs_flat[permuted_idx]
-print('training shape:', x_train.shape)
+# Flatten blobs: training set
+X_train = blobs.reshape((len(blobs), np.prod(blobs.shape[1:])))
+print('blobs_flat shape:', X_train.shape)
 
 FIG_SIZES = {
     2: (15, 5),
@@ -40,17 +38,17 @@ FIG_SIZES = {
 }
 
 # Parameters
-num_samples, initial_dim = x_train.shape
+num_samples, initial_dim = X_train.shape
 latent_dim = 5
 num_epochs = 100
 batch_size = 64
 fig_size = FIG_SIZES[latent_dim]
 
 vae_config = {
-    'random_seed': SEED,
+    'weight_seed': SEED,
     'initial_dim': initial_dim,
     'latent_dim': latent_dim,
-    'IsBinaryInput': False,
+    'is_binary_input': False,
     'output_dist': 'bernoulli',
     'encoder': {
         'units': [512, 64],
@@ -85,9 +83,7 @@ betas = [40]
 weight_init_seeds = [4]  # list(range(1, 26))
 for weight_seed in weight_init_seeds:
     for beta in betas:
-        # print("Progress: lambda_od={}, multiplier={}, seed={}".format(
-        #     lambda_od,
-        #     multiplier, SEED))
+
         # vae_config['random_seed'] = SEED
         #
         # lambda_d = multiplier * lambda_od
@@ -95,43 +91,39 @@ for weight_seed in weight_init_seeds:
         #           'lambda_od': lambda_od,
         #           'lambda_d': lambda_d}
         # vae = DIPVae(vae_config, params)
-        #
-        # st = '{}_L{}_lod{}_ld{}_seed{}'.format(model, latent_dim,
-        #                                        lambda_od, lambda_d, SEED)
 
-        vae_config['random_seed'] = weight_seed
+        vae_config['weight_seed'] = weight_seed
         params = {"beta": beta}
         vae = TCVAE(vae_config, params)
-        st = f"{model}_L{latent_dim}_b{beta}_seed{weight_seed}"
 
         # TRAINING
         try:
             history = vae.vae.fit(
-                x_train,
+                X_train,
                 None,
                 epochs=num_epochs,
                 batch_size=batch_size,
-                shuffle=False,
+                shuffle=True,
             )
 
             sns.set_style("white")
             plt.figure(figsize=(10, 7))
             plt.plot(history.history['loss'][1:])
-            plt.title(st)
+            plt.title(vae.str_repr)
             plt.ylabel("Loss")
             plt.xlabel("Epoch")
-            plt.savefig(f"results/history/hist_{st}")
+            plt.savefig(f"results/history/hist_{vae.str_repr}")
 
         except KeyboardInterrupt:
             print("Training interrupted.")
 
         finally:
-            means, log_vars = vae.encoder.predict(blobs_flat)
+            means, log_vars = vae.encoder.predict(X_train)
             print('means shape:', means.shape)
             print('log_vars shape:', log_vars.shape)
 
             quality(
-                dataset=blobs_flat,
+                dataset=X_train,
                 mean_vec=means,
                 log_var_vec=log_vars,
                 decode_model=vae.decoder,
@@ -141,22 +133,22 @@ for weight_seed in weight_init_seeds:
                 b=3,
                 seed=12,
                 out_dir=fig_dir,
-                save_str=st,
+                save_str=vae.str_repr,
                 fig_size=fig_size
             )
 
             print("Saved qualitative evaluation figure.")
 
             # SAVE REPRESENTATIONS AND LOG VARS
-            means_str = f'results/repres/means_{st}.npz'
-            log_vars_str = f'results/repres/log_vars_{st}.npz'
+            means_str = f'results/repres/means_{vae.str_repr}.npz'
+            log_vars_str = f'results/repres/log_vars_{vae.str_repr}.npz'
             np.savez_compressed(means_str, means)
             np.savez_compressed(log_vars_str, log_vars)
             print("Saved representations and log_vars.")
 
             # SAVE MODELS
-            enc_str = f'results/models/blob_enc_{st}.h5'
-            dec_str = f'results/models/blob_dec_{st}.h5'
+            enc_str = f'results/models/blob_enc_{vae.str_repr}.h5'
+            dec_str = f'results/models/blob_dec_{vae.str_repr}.h5'
             vae.encoder.save(enc_str)
             vae.decoder.save(dec_str)
             print("Saved models to disk")

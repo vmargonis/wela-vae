@@ -1,21 +1,46 @@
-import keras
+import tensorflow as tf
+from keras import backend as K
 from keras.models import Model
 from keras.layers import Dense, Input, Lambda
 from keras.initializers.initializers_v2 import GlorotUniform
-from vae.utils import reparameterization_trick
 from typing import Dict, Tuple
 
 
-def reparameterize(config: Dict) -> keras.Model:
+def _reparameterization_trick(args: Tuple[tf.Tensor, tf.Tensor]) -> tf.Tensor:
+    """
+    Reparameterization trick:  z = mu + eps*sigma, eps~N(0,1)
+
+    Parameters
+    ----------
+    args : Tuple[tf.Tensor, tf.Tensor]
+        [mean, log_var], tensors of shape (batch_size, latent_dim)
+
+    Returns
+    -------
+    tf.Tensor
+        Gaussian samples, z = mu + eps*sigma, eps~N(0,1),
+        tensor of shape (batch_size, latent_dim).
+    """
+
+    mean, log_var = args
+
+    white_noise = K.random_normal(
+        shape=(K.shape(mean)[0], K.shape(mean)[1])
+    )
+
+    return mean + K.exp(0.5 * log_var) * white_noise
+
+
+def reparameterize(config: Dict) -> Model:
 
     mean = Input(shape=(config["latent_dim"],))
     log_var = Input(shape=(config["latent_dim"],))
 
     z_sample = Lambda(
-        reparameterization_trick,
+        _reparameterization_trick,
         output_shape=(config["latent_dim"],),
         name="z_sample",
-    )([mean, log_var])
+    )((mean, log_var))
 
     reparameterizer = Model(
         inputs=[mean, log_var],
@@ -28,7 +53,7 @@ def reparameterize(config: Dict) -> keras.Model:
 
 def stacked_encoder(
         config: Dict,
-) -> Tuple[keras.Input, keras.layers.Dense, keras.layers.Dense, keras.Model]:
+) -> Tuple[Input, Dense, Dense, Model]:
 
     # glorot weight initializer
     w_init = GlorotUniform(seed=config["weight_seed"])
@@ -62,7 +87,7 @@ def stacked_encoder(
         name="encoder_mean",
     )(hidden)
 
-    # Log vars layer
+    # Log var layer
     log_var = Dense(
         units=config["latent_dim"],
         activation=config["encoder"]["output_activation"],
@@ -79,7 +104,7 @@ def stacked_encoder(
     return input_vector, mean, log_var, encoder
 
 
-def stacked_decoder(config: Dict) -> keras.Model:
+def stacked_decoder(config: Dict) -> Model:
 
     # glorot weight initializer
     w_init = GlorotUniform(seed=config["weight_seed"])

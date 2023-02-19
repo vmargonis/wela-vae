@@ -4,7 +4,8 @@ from vae.losses import gaussian_loss, bernoulli_loss
 
 
 def reparameterization_trick(args):
-    """Reparameterization trick:  z = mu + eps*sigma, eps~N(0,1)
+    """
+    Reparameterization trick:  z = mu + eps*sigma, eps~N(0,1)
 
     Parameters
     ----------
@@ -49,15 +50,15 @@ def get_reconstruction_loss(input_vec, output_vec, config):
 def add_optimizer(config):
     """Optimizer selector."""
 
-    learning_rate = config['optimizer']['learning_rate']
+    learning_rate = config["optimizer"]["learning_rate"]
 
-    if config['optimizer']['type'] == 'Adagrad':
+    if config["optimizer"]["type"] == "Adagrad":
         optimizer = Adagrad(learning_rate=learning_rate)
-    elif config['optimizer']['type'] == 'Adam':
+    elif config["optimizer"]["type"] == "Adam":
         optimizer = Adam(learning_rate=learning_rate)
-    elif config['optimizer']['type'] == 'RMSprop':
+    elif config["optimizer"]["type"] == "RMSprop":
         optimizer = RMSprop(learning_rate=learning_rate)
-    elif config['optimizer']['type'] == 'SGD':
+    elif config["optimizer"]["type"] == "SGD":
         optimizer = SGD(learning_rate=learning_rate)
     else:
         raise NotImplementedError("Optimizer not supported.")

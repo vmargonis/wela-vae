@@ -42,8 +42,7 @@ class BetaVAE(BaseVAE):
         self.vae.compile(optimizer=add_optimizer(config))
 
     def beta_vae_loss(self, config, params):
-        """
-        BETAVae Batch Loss:
+        """BETAVae Batch Loss:
         beta * KL divergence + reconstruction loss
         """
 
@@ -77,8 +76,7 @@ class TCVAE(BaseVAE):
         self.vae.compile(optimizer=add_optimizer(config))
 
     def tcvae_loss(self, config, params):
-        """
-        TCVAE Batch Loss:
+        """TCVAE Batch Loss:
         KL divergence + reconstruction loss + beta * total correlation
         """
 
@@ -116,8 +114,7 @@ class DIPVAE(BaseVAE):
         self.vae.compile(optimizer=add_optimizer(config))
 
     def dip_vae_loss(self, config, params):
-        """
-        DIPVAE Batch Loss:
+        """DIPVAE Batch Loss:
         KL divergence + reconstruction loss + DIP regularizer
         """
         kl = kl_divergence(self.mean, self.log_var)

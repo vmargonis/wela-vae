@@ -7,8 +7,7 @@ from typing import Dict, Tuple
 
 
 def _reparameterization_trick(args: Tuple[tf.Tensor, tf.Tensor]) -> tf.Tensor:
-    """
-    Reparameterization trick:  z = mu + eps*sigma, eps~N(0,1)
+    """Reparameterization trick:  z = mu + eps*sigma, eps~N(0,1)
 
     Parameters
     ----------

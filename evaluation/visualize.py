@@ -6,7 +6,7 @@ sns.set()
 sns.set_style("white")
 
 # Figure variables
-STD_STEP = 3  # Traversals: How many stds away from mean
+STD_STEP = 3  # Traversals: maximum stds away from mean
 TRAVERSE_STEP = 10  # How many steps in the traversal
 FIG_SIZE_MAP = {  # latent dim to figure size
     2: (15, 5),
@@ -110,7 +110,7 @@ def quality(
         ax = plt.subplot(latent_dim+2, TRAVERSE_STEP+2, col+2)
         plt.imshow(
             test_images[col].reshape(image_resolution, image_resolution),
-            cmap='gray'
+            cmap="gray"
         )
         ax.grid(False)
         ax.set_xticks([])
@@ -118,18 +118,18 @@ def quality(
         if col == TRAVERSE_STEP - 1:
             ax.yaxis.set_label_position("right")
             ax.set_ylabel(
-                'orig.',
+                "orig.",
                 fontsize=22,
                 rotation=0,
-                ha='left',
-                va='center'
+                ha="left",
+                va="center"
             )
 
         # display reconstruction
         ax = plt.subplot(latent_dim+2, TRAVERSE_STEP+2, col+2+TRAVERSE_STEP+2)
         plt.imshow(
             test_recons[col].reshape(image_resolution, image_resolution),
-            cmap='gray'
+            cmap="gray"
         )
         ax.grid(False)
         ax.set_xticks([])
@@ -137,11 +137,11 @@ def quality(
         if col == TRAVERSE_STEP - 1:
             ax.yaxis.set_label_position("right")
             ax.set_ylabel(
-                'recon.',
+                "recon.",
                 fontsize=22,
                 rotation=0,
-                ha='left',
-                va='center'
+                ha="left",
+                va="center"
             )
 
     # CONSTRUCT THE REST OF THE FIGURE
@@ -174,8 +174,9 @@ def quality(
         plt.imshow(
             originals[sorted_idx[i]].reshape(
                 image_resolution,
-                image_resolution),
-            cmap='gray'
+                image_resolution
+            ),
+            cmap="gray"
         )
         ax.grid(False)
         # ax.set_ylabel(r'${}$'.format(sorted_idx[i]), fontsize=22, rotation=0,
@@ -193,7 +194,7 @@ def quality(
             pos_map[sorted_idx[i], :, :],
             vmin=-STD_STEP,
             vmax=STD_STEP,
-            cmap='jet'
+            cmap="jet"
         )
         ax.yaxis.set_label_position("right")
         # ax.set_ylabel(r'${:.2f}$'.format(mean_variances[sorted_idx[i]]),
@@ -213,7 +214,7 @@ def quality(
                 traversed[sorted_idx[i], col, :].reshape(
                     image_resolution,
                     image_resolution),
-                cmap='gray'
+                cmap="gray"
             )
             ax.grid(False)
             ax.set_xticks([])
@@ -221,6 +222,6 @@ def quality(
 
     ax.autoscale(enable=True)
     plt.subplots_adjust(wspace=0.05, hspace=0.05)
-    plt.savefig(out_dir+f'/quality_{save_str}.pdf', bbox_inches='tight')
+    plt.savefig(out_dir+f"/quality_{save_str}.pdf", bbox_inches="tight")
 
     return None

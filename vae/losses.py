@@ -7,8 +7,7 @@ def kl_divergence(
         mean: tf.Tensor,
         log_var: tf.Tensor,
 ) -> tf.Tensor:
-    """
-    Computes batch KL divergence.
+    """Computes batch KL divergence.
 
     Parameters
     ----------
@@ -34,8 +33,7 @@ def bernoulli_loss(
         reconstruction: tf.Tensor,
         is_binary_input: bool,
 ) -> tf.Tensor:
-    """
-    Computes batch cross-entropy loss for multi-bernoulli decoder.
+    """Computes batch cross-entropy loss for multi-bernoulli decoder.
 
     Parameters
     ----------
@@ -77,8 +75,7 @@ def gaussian_loss(
         original: tf.Tensor,
         reconstruction: tf.Tensor,
 ) -> tf.Tensor:
-    """
-    Computes batch L2 loss for Gaussian decoder.
+    """Computes batch L2 loss for Gaussian decoder.
 
     Parameters
     ----------
@@ -98,8 +95,7 @@ def gaussian_loss(
 
 
 def compute_covariance_mean(mean: tf.Tensor) -> tf.Tensor:
-    """
-    Computes the batch covariance matrix of means for DIP-VAE I.
+    """Computes the batch covariance matrix of means for DIP-VAE I.
     Uses cov(means) = E[means^T * means] - E[means]^T * E[means].
 
     Parameters
@@ -129,8 +125,7 @@ def compute_covariance_z(
         mean: tf.Tensor,
         log_var: tf.Tensor,
 ) -> tf.Tensor:
-    """
-    Computes the batch covariance matrix of Gaussian samples z
+    """Computes the batch covariance matrix of Gaussian samples z
     for DIP-VAE II. Uses Cov_q(z)(z) = E[Cov] + Cov(means).
 
     Parameters
@@ -160,8 +155,7 @@ def dip_vae_regularizer(
         lambda_off_diag: float,
         lambda_diag: float,
 ) -> tf.Tensor:
-    """
-    Compute regularizers for DIP-VAE I & II.
+    """Compute regularizers for DIP-VAE I & II.
 
     Parameters
     ----------
@@ -192,8 +186,7 @@ def gaussian_log_density(
         mean: tf.Tensor,
         log_var: tf.Tensor,
 ) -> tf.Tensor:
-    """
-    Computes element-wise Gaussian log density.
+    """Computes element-wise Gaussian log density.
     Uses log(q(z)) = -0.5 * (log(2pi) + log(sigma^2) + (z-mu)^2 * sigma^(-2))
 
     Parameters
@@ -221,8 +214,7 @@ def total_correlation(
         mean: tf.Tensor,
         log_var: tf.Tensor,
 ) -> tf.Tensor:
-    """
-    Estimation of total correlation on a batch.
+    """Estimation of total correlation on a batch.
     We need to compute the expectation over a batch of:
     E_j [log(q(z(x_j))) - log(prod_l q(z(x_j)_l))].
     Constants are ignored as they do not matter for the minimization.

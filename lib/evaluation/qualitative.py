@@ -1,4 +1,4 @@
-import keras
+from keras.models import Model
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -6,28 +6,28 @@ import seaborn as sns
 sns.set()
 sns.set_style("white")
 
-# Figure variables
-STD_STEP = 3  # Traversals: maximum stds away from mean
-TRAVERSE_STEP = 10  # How many steps in the traversal
-
 
 def _traverse(
     mean_vec: np.array,
-    decoder: keras.Model,
+    decoder: Model,
     latent_dim: int,
     initial_dim: int,
     is_wela: bool,
+    std_bound: float = 3.0,
 ) -> np.array:
-    """Traverses each latent channel in [-3, +3] while keeping the others fixed.
-    At each step of the traversal, the reconstruction is saved to be displayed later.
+    """Traverses each latent channel in [-std_bound, +std_bound] while keeping
+    the others fixed. Each channel is a normal distribution N(0, 1) so [-3, +3]
+    suffices for most cases. At each step of the traversal, the reconstruction is
+    saved to be displayed later.
     """
-    interval = np.linspace(-STD_STEP, STD_STEP, TRAVERSE_STEP)
-    traversals = np.zeros((latent_dim, TRAVERSE_STEP, initial_dim))
+
+    interval = np.linspace(-std_bound, std_bound, 10)
+    traversals = np.zeros((latent_dim, 10, initial_dim))
 
     for i in range(latent_dim):
         aux = mean_vec[i, :].copy()
         aux = np.expand_dims(aux, axis=1)
-        for j in range(TRAVERSE_STEP):
+        for j in range(10):
             aux[i, 0] = interval[j]
 
             if is_wela:
@@ -64,10 +64,11 @@ def make_qualitative_evaluation_figure(
     dataset: np.array,
     mean_vec: np.array,
     log_var_vec: np.array,
-    decoder: keras.Model,
+    decoder: Model,
     is_wela: bool,
     figure_name: str,
     output_directory: str,
+    std_bound: float = 3.0,
 ) -> None:
     """Constructs the qualitative evaluation figure."""
 
@@ -83,7 +84,7 @@ def make_qualitative_evaluation_figure(
 
     # TWO FIRST ROWS OF FIGURE (ORIGINALS AND RECONSTRUCTIONS)
     np.random.seed(42)
-    recon_ids = np.random.choice(n_samples, TRAVERSE_STEP)
+    recon_ids = np.random.choice(n_samples, 10)
     test_images = dataset[recon_ids]
     test_means = mean_vec[recon_ids]
     if is_wela:
@@ -91,29 +92,29 @@ def make_qualitative_evaluation_figure(
     else:
         test_recons = decoder.predict(test_means)
 
-    plt.figure(figsize=(15, 5+(latent_dim-2)*1.25))
-    for col in range(TRAVERSE_STEP):
+    plt.figure(figsize=(15, 5 + (latent_dim - 2) * 1.25))
+    for col in range(10):
         # display original
-        ax = plt.subplot(latent_dim + 2, TRAVERSE_STEP + 2, col + 2)
+        ax = plt.subplot(latent_dim + 2, 12, col + 2)
         plt.imshow(
             test_images[col].reshape(image_resolution, image_resolution), cmap="gray"
         )
         ax.grid(False)
         ax.set_xticks([])
         ax.set_yticks([])
-        if col == TRAVERSE_STEP - 1:
+        if col == 9:
             ax.yaxis.set_label_position("right")
             ax.set_ylabel("orig.", fontsize=22, rotation=0, ha="left", va="center")
 
         # display reconstruction
-        ax = plt.subplot(latent_dim + 2, TRAVERSE_STEP + 2, col + 2 + TRAVERSE_STEP + 2)
+        ax = plt.subplot(latent_dim + 2, 12, col + 14)
         plt.imshow(
             test_recons[col].reshape(image_resolution, image_resolution), cmap="gray"
         )
         ax.grid(False)
         ax.set_xticks([])
         ax.set_yticks([])
-        if col == TRAVERSE_STEP - 1:
+        if col == 9:
             ax.yaxis.set_label_position("right")
             ax.set_ylabel("recon.", fontsize=22, rotation=0, ha="left", va="center")
 
@@ -137,10 +138,8 @@ def make_qualitative_evaluation_figure(
     )
 
     for i in range(latent_dim):
-        ax = plt.subplot(
-            latent_dim + 2, TRAVERSE_STEP + 2, (i + 2) * (TRAVERSE_STEP + 2) + 1
-        )
-
+        # plot original image left
+        ax = plt.subplot(latent_dim + 2, 12, (i + 2) * 12 + 1)
         plt.imshow(
             originals[sorted_idx[i]].reshape(image_resolution, image_resolution),
             cmap="gray",
@@ -149,27 +148,19 @@ def make_qualitative_evaluation_figure(
         ax.set_xticks([])
         ax.set_yticks([])
 
-        ax = plt.subplot(
-            latent_dim + 2,
-            TRAVERSE_STEP + 2,
-            (i + 2) * (TRAVERSE_STEP + 2) + 1 + TRAVERSE_STEP + 1,
-        )
-
+        # plot heatmap right
+        ax = plt.subplot(latent_dim + 2, 12, (i + 2) * 12 + 12)
         plt.imshow(
-            pos_map[sorted_idx[i], :, :], vmin=-STD_STEP, vmax=STD_STEP, cmap="jet"
+            pos_map[sorted_idx[i], :, :], vmin=-std_bound, vmax=std_bound, cmap="jet"
         )
         ax.yaxis.set_label_position("right")
         ax.grid(False)
         ax.set_xticks([])
         ax.set_yticks([])
 
-        for col in range(TRAVERSE_STEP):
-            ax = plt.subplot(
-                latent_dim + 2,
-                TRAVERSE_STEP + 2,
-                (i + 2) * (TRAVERSE_STEP + 2) + col + 2,
-            )
-
+        # plot traversals in-between
+        for col in range(10):
+            ax = plt.subplot(latent_dim + 2, 12, (i + 2) * 12 + col + 2)
             plt.imshow(
                 traversed[sorted_idx[i], col, :].reshape(
                     image_resolution, image_resolution

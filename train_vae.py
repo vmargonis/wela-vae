@@ -2,8 +2,7 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import seaborn as sns
-from keras import backend as K
-from evaluation.visualize import quality
+from vae.evaluation.qualitative import make_qualitative_evaluation_figure
 from vae.vae_models import TCVAE
 
 import os
@@ -46,7 +45,7 @@ vae_config = {
     "encoder": {
         "units": [512, 64],
         "activation": ["relu", "relu"],
-        "output_activation": "linear"
+        "output_activation": "linear",
     },
     "decoder": {
         "units": [512, 64],
@@ -55,7 +54,7 @@ vae_config = {
     },
     "optimizer": {
         "type": "Adam",
-        "learning_rate": 1e-04
+        "learning_rate": 1e-04,
     },
 }
 
@@ -115,14 +114,14 @@ for weight_seed in weight_init_seeds:
             print("means shape:", means.shape)
             print("log_vars shape:", log_vars.shape)
 
-            quality(
+            make_qualitative_evaluation_figure(
                 dataset=X_train,
                 mean_vec=means,
                 log_var_vec=log_vars,
                 decoder=vae.decoder,
-                out_dir=fig_dir,
-                save_str=vae.str_repr,
                 is_wela=False,
+                figure_name=vae.str_repr,
+                output_directory=fig_dir,
             )
 
             print("Saved qualitative evaluation figure.")

@@ -2,8 +2,8 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import seaborn as sns
-from vae.evaluation.qualitative import make_qualitative_evaluation_figure
-from vae.vae_models import TCVAE
+from lib.evaluation.qualitative import make_qualitative_evaluation_figure
+from lib.models.vae import TCVAE
 
 import os
 import random
@@ -82,7 +82,7 @@ for weight_seed in weight_init_seeds:
         # params = {'dip_vae_type': dip_vae_type,
         #           'lambda_od': lambda_od,
         #           'lambda_d': lambda_d}
-        # vae = DIPVae(vae_config, params)
+        # lib = DIPVae(vae_config, params)
 
         vae_config["weight_seed"] = weight_seed
         params = {"beta": beta}

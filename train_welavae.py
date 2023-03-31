@@ -3,8 +3,8 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import seaborn as sns
 from keras import backend as K
-from vae.welavae_models import WeLaTCVae
-from vae.evaluation.qualitative import quality_welavae
+from lib.models.welavae import WeLaTCVae
+from lib.evaluation.qualitative import quality_welavae
 from os.path import exists
 from os import mkdir
 

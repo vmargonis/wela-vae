@@ -5,9 +5,9 @@ from typing import Dict
 
 
 def get_reconstruction_loss(
-        input_vec: tf.Tensor,
-        output_vec: tf.Tensor,
-        config: Dict,
+    input_vec: tf.Tensor,
+    output_vec: tf.Tensor,
+    config: Dict,
 ) -> tf.Tensor:
     """Get recostruction loss based on I/O and config."""
 

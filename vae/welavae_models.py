@@ -1,7 +1,7 @@
 from keras.models import Model
 from keras.initializers import glorot_uniform
 from vae.losses import *
-from vae.welavae_layers import stacked_encoder, stacked_decoder, reparameterize
+from legacy.welavae_layers import stacked_encoder, stacked_decoder, reparameterize
 from vae.utils import add_optimizer
 
 

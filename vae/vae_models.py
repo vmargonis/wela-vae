@@ -1,5 +1,5 @@
 from keras.models import Model
-from vae.vae_layers import reparameterize, stacked_encoder, stacked_decoder
+from vae.layers import reparameterize, dense_encoder, dense_decoder
 from vae.losses import (
     kl_divergence,
     total_correlation,
@@ -14,11 +14,11 @@ class BaseVAE:
     """Base VAE architecture"""
     def __init__(self, config):
 
-        self._in, self.mean, self.log_var, self.encoder = stacked_encoder(
+        self._in, self.mean, self.log_var, self.encoder = dense_encoder(
             config
         )
         self.reparam = reparameterize(config)
-        self.decoder = stacked_decoder(config)
+        self.decoder = dense_decoder(config)
         self._z = self.reparam(self.encoder(self._in))
         self._out = self.decoder(self.reparam(self.encoder(self._in)))
         self.vae = Model(self._in, self._out)

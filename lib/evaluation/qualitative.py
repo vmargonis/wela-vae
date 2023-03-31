@@ -9,7 +9,6 @@ sns.set_style("white")
 # Figure variables
 STD_STEP = 3  # Traversals: maximum stds away from mean
 TRAVERSE_STEP = 10  # How many steps in the traversal
-FIG_SIZE_MAP = {2: (15, 5), 5: (15, 8.75), 10: (15, 15)}  # latent dim to figure size
 
 
 def _traverse(
@@ -46,6 +45,7 @@ def _make_heatmap(
     samples_per_position: int,
 ) -> np.array:
     """Makes the positional heatmaps of the qualitative figure."""
+
     r_prime = mean_vec.reshape(
         (image_resolution, image_resolution, samples_per_position, latent_dim)
     )
@@ -70,15 +70,11 @@ def make_qualitative_evaluation_figure(
     output_directory: str,
 ) -> None:
     """Constructs the qualitative evaluation figure."""
+
     n_samples, initial_dim = dataset.shape
     samples_per_position = n_samples // initial_dim
     image_resolution = np.sqrt(initial_dim).astype(int)
     latent_dim = mean_vec.shape[1]
-
-    if latent_dim not in [2, 5, 10]:
-        raise ValueError(f"No fig size set for latent_dim={latent_dim}")
-    else:
-        fig_size = FIG_SIZE_MAP[latent_dim]
 
     # construct position heat map with all data:
     pos_map = _make_heatmap(
@@ -95,7 +91,7 @@ def make_qualitative_evaluation_figure(
     else:
         test_recons = decoder.predict(test_means)
 
-    plt.figure(figsize=fig_size)
+    plt.figure(figsize=(15, 5+(latent_dim-2)*1.25))
     for col in range(TRAVERSE_STEP):
         # display original
         ax = plt.subplot(latent_dim + 2, TRAVERSE_STEP + 2, col + 2)
@@ -127,7 +123,7 @@ def make_qualitative_evaluation_figure(
 
     # PICK late_dim images for traversals:
     traverse_ids = np.array(latent_dim * [2080])
-    # idx_2 = np.random.choice(num_samples, late_dim)
+    # traverse_ids = np.random.choice(num_samples, late_dim)
     originals = dataset[traverse_ids]
     representations = mean_vec[traverse_ids]
 

@@ -13,6 +13,5 @@ legacy/
 blobs/data
 blobs/images
 
-models/
 results/
 logs/*

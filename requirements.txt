@@ -6,3 +6,8 @@ seaborn==0.12.2
 scikit_learn==1.2.1
 tqdm==4.64.1
 tensorflow==2.11.0
+
+# formatters and linter
+black==23.3.0
+flake8==6.0.0
+flake8-pyproject==1.2.3

@@ -1,17 +1,15 @@
 from keras.models import Model
 from lib.models.layers import reparameterize, dense_encoder, dense_decoder
-from lib.models.losses import (
-    kl_divergence,
-    total_correlation,
-    compute_covariance_z,
-    compute_covariance_mean,
-    dip_vae_regularizer,
+from lib.models.losses import kl_divergence, total_correlation
+from lib.models.utils import (
+    add_optimizer,
+    get_reconstruction_loss,
+    get_dip_vae_regularizer,
 )
-from lib.models.utils import add_optimizer, get_reconstruction_loss
 
 
 class BaseVAE:
-    """Base VAE architecture"""
+    """Base VAE architecture."""
 
     def __init__(self, config):
         self._in, self.mean, self.log_var, self.encoder = dense_encoder(config)
@@ -23,6 +21,8 @@ class BaseVAE:
 
 
 class BetaVAE(BaseVAE):
+    """Beta VAE."""
+
     def __init__(self, config, params):
         super().__init__(config)
 
@@ -44,17 +44,13 @@ class BetaVAE(BaseVAE):
         """
 
         kl = kl_divergence(self.mean, self.log_var)
-
-        reconstruction_loss = get_reconstruction_loss(
-            self._in,
-            self._out,
-            config,
-        )
-
+        reconstruction_loss = get_reconstruction_loss(self._in, self._out, config)
         return params["beta"] * kl + reconstruction_loss
 
 
 class TCVAE(BaseVAE):
+    """Total Correlation VAE."""
+
     def __init__(self, config, params):
         super().__init__(config)
 
@@ -76,19 +72,15 @@ class TCVAE(BaseVAE):
         """
 
         kl = kl_divergence(self.mean, self.log_var)
-
-        reconstruction_loss = get_reconstruction_loss(
-            self._in,
-            self._out,
-            config,
-        )
-
+        reconstruction_loss = get_reconstruction_loss(self._in, self._out, config)
         tc = total_correlation(self._z, self.mean, self.log_var)
 
         return kl + reconstruction_loss + (params["beta"] - 1) * tc
 
 
 class DIPVAE(BaseVAE):
+    """Disentangled Inferred Prior VAE."""
+
     def __init__(self, config, params):
         super().__init__(config)
 
@@ -111,28 +103,7 @@ class DIPVAE(BaseVAE):
         KL divergence + reconstruction loss + DIP regularizer
         """
         kl = kl_divergence(self.mean, self.log_var)
+        reconstruction_loss = get_reconstruction_loss(self._in, self._out, config)
+        dip_regularizer = get_dip_vae_regularizer(self.mean, self.log_var, params)
 
-        reconstruction_loss = get_reconstruction_loss(
-            self._in,
-            self._out,
-            config,
-        )
-
-        # DIP VAE REGULARIZATION
-        if params["dip_vae_type"] == "i":
-            cov_matrix = compute_covariance_mean(self.mean)
-        elif params["dip_vae_type"] == "ii":
-            cov_matrix = compute_covariance_z(self.mean, self.log_var)
-        else:
-            raise ValueError(
-                f"Unknown DIPVAE type {params['dip_vae_type']}."
-                "Choose either 'i' or 'ii'."
-            )
-
-        regularizer = dip_vae_regularizer(
-            cov_matrix,
-            params["lambda_off_diag"],
-            params["lambda_diag"],
-        )
-
-        return kl + reconstruction_loss + regularizer
+        return kl + reconstruction_loss + dip_regularizer

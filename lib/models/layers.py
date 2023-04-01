@@ -194,21 +194,21 @@ def dense_decoder(config: Dict) -> Model:
     )(hidden)
 
     if config["label_dim"]:
-        label_out_1 = Dense(
+        label_1_out = Dense(
             units=config["label_dim"],
             activation="softmax",
             kernel_initializer=w_init,
             name="label_1_output",
         )(hidden)
 
-        label_out_2 = Dense(
+        label_2_out = Dense(
             units=config["label_dim"],
             activation="softmax",
             kernel_initializer=w_init,
             name="label_2_output",
         )(hidden)
 
-        outputs = [output_vector, label_out_1, label_out_2]
+        outputs = [output_vector, label_1_out, label_2_out]
 
     else:
         outputs = output_vector

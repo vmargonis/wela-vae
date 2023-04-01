@@ -75,7 +75,6 @@ betas = [40]
 weight_init_seeds = [4]  # list(range(1, 26))
 for weight_seed in weight_init_seeds:
     for beta in betas:
-
         # vae_config['random_seed'] = SEED
         #
         # lambda_d = multiplier * lambda_od

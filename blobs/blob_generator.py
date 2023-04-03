@@ -71,6 +71,7 @@ def make_example_image() -> None:
 
 
 def generate_blobs() -> None:
+    """Generates blob images."""
     blobset64 = np.zeros((N_SAMPLES, IMAGE_SIZE, IMAGE_SIZE))
     ground_truth_factors = np.zeros((N_SAMPLES, 2))
 
@@ -88,62 +89,72 @@ def generate_blobs() -> None:
     return None
 
 
-# Generate weak labels of angle and distance
-print("\n")
-print("Generating Angle/Distance labels...")
+def generate_polar_labels() -> None:
+    """Generates polar labels for each image."""
+    for label_resolution in tqdm(range(2, 11)):
+        angle_labels = np.zeros((N_SAMPLES, label_resolution))
+        distance_labels = np.zeros((N_SAMPLES, label_resolution))
 
-for label_resolution in tqdm(range(2, 11)):
-    angle_labels = np.zeros((N_SAMPLES, label_resolution))
-    distance_labels = np.zeros((N_SAMPLES, label_resolution))
+        angle_step = np.pi / (2 * label_resolution)
+        distance_step = np.sqrt(IMAGE_SIZE**2 + IMAGE_SIZE**2) / label_resolution
 
-    angle_step = np.pi / (2 * label_resolution)
-    distance_step = np.sqrt(IMAGE_SIZE**2 + IMAGE_SIZE**2) / label_resolution
+        num = 0
+        for x in range(IMAGE_SIZE):
+            for y in range(IMAGE_SIZE):
+                phi = np.arctan2(y, x)  # angle from upper-left corner
+                dis = np.sqrt(x**2 + y**2)  # distance from upper-left corner
 
-    num = 0
-    for x in range(IMAGE_SIZE):
-        for y in range(IMAGE_SIZE):
-            phi = np.arctan2(y, x)  # angle from upper-left corner
-            dis = np.sqrt(x**2 + y**2)  # distance from upper-left corner
+                for k in range(label_resolution):
+                    if k * angle_step < phi <= (k + 1) * angle_step:
+                        angle_labels[num, k] = 1
 
-            for k in range(label_resolution):
-                if k * angle_step < phi <= (k + 1) * angle_step:
-                    angle_labels[num, k] = 1
+                    if k * distance_step < dis <= (k + 1) * distance_step:
+                        distance_labels[num, k] = 1
+                num += 1
 
-                if k * distance_step < dis <= (k + 1) * distance_step:
-                    distance_labels[num, k] = 1
-            num += 1
+        # small correction: assign to label 0 when k=0 and k * angle_step = phi
+        problematic_ids = angle_labels.sum(axis=1) == 0
+        angle_labels[problematic_ids, 0] = 1
 
-    # small correction: assign to label 0 when k=0 and k * angle_step = phi
-    problematic_ids = angle_labels.sum(axis=1) == 0
-    angle_labels[problematic_ids, 0] = 1
+        assert (
+            angle_labels.sum(axis=1).min() == angle_labels.sum(axis=1).max()
+        )  # min=max=1; labels are one-hot
+        assert angle_labels.sum(axis=1).min() == angle_labels.sum(axis=1).max()
 
-    assert (
-        angle_labels.sum(axis=1).min() == angle_labels.sum(axis=1).max()
-    )  # min=max=1; labels are one-hot
-    assert angle_labels.sum(axis=1).min() == angle_labels.sum(axis=1).max()
+        np.savez_compressed(
+            f"{DATA_PATH}/blobs64_anglelabels_res{label_resolution}", angle_labels
+        )
+        np.savez_compressed(
+            f"{DATA_PATH}/blobs64_distlabels_res{label_resolution}", distance_labels
+        )
 
-    np.savez_compressed(
-        f"{DATA_PATH}/blobs64_anglelabels_res{label_resolution}", angle_labels
-    )
-    np.savez_compressed(
-        f"{DATA_PATH}/blobs64_distlabels_res{label_resolution}", distance_labels
-    )
+        # plot angle/distance labels + export images
+        angle_map = angle_labels.argmax(axis=1).reshape(IMAGE_SIZE, IMAGE_SIZE)
+        plt.figure(figsize=(5, 5))
+        plt.imshow(angle_map, cmap="gray")
+        plt.title(f"Angle labels, res={label_resolution}")
+        plt.savefig(
+            f"{IMAGE_PATH}/anglelabels_res{label_resolution}.png", bbox_inches="tight"
+        )
 
-    # plot angle/distance labels + export images
-    angle_map = angle_labels.argmax(axis=1).reshape(IMAGE_SIZE, IMAGE_SIZE)
-    plt.figure(figsize=(5, 5))
-    plt.imshow(angle_map, cmap="gray")
-    plt.title(f"Angle labels, res={label_resolution}")
-    plt.savefig(
-        f"{IMAGE_PATH}/anglelabels_res{label_resolution}.png", bbox_inches="tight"
-    )
+        dis_map = distance_labels.argmax(axis=1).reshape(IMAGE_SIZE, IMAGE_SIZE)
+        plt.figure(figsize=(5, 5))
+        plt.imshow(dis_map, cmap="gray")
+        plt.title(f"Distance labels, res={label_resolution}")
+        plt.savefig(
+            f"{IMAGE_PATH}/distlabels_res{label_resolution}.png", bbox_inches="tight"
+        )
 
-    dis_map = distance_labels.argmax(axis=1).reshape(IMAGE_SIZE, IMAGE_SIZE)
-    plt.figure(figsize=(5, 5))
-    plt.imshow(dis_map, cmap="gray")
-    plt.title(f"Distance labels, res={label_resolution}")
-    plt.savefig(
-        f"{IMAGE_PATH}/distlabels_res{label_resolution}.png", bbox_inches="tight"
-    )
+    print("Labels generated.")
 
-print("Labels generated.")
+
+def generate_dataset() -> None:
+    """Main generating function."""
+    make_example_image()
+    generate_blobs()
+    generate_polar_labels()
+    return None
+
+
+if __name__ == "__main__":
+    generate_dataset()

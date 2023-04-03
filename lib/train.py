@@ -23,7 +23,7 @@ for res_dir in ["results/models", "results/repres", "results/history"]:
         mkdir(res_dir)
 
 # LOAD BLOBS DATA SETS
-dataset_zip = np.load("blobs/data/blobs64.npz")
+dataset_zip = np.load("../blobs/data/blobs64.npz")
 blobs = dataset_zip["arr_0"]
 print("blobs shape:", blobs.shape)
 
@@ -41,6 +41,7 @@ vae_config = {
     "weight_seed": SEED,
     "initial_dim": initial_dim,
     "latent_dim": latent_dim,
+    "label_dim": None,
     "is_binary_input": False,
     "output_dist": "bernoulli",
     "encoder": {

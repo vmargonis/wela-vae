@@ -1,14 +1,15 @@
-import numpy as np
-import tensorflow as tf
-import matplotlib.pyplot as plt
-import seaborn as sns
-from lib.evaluation.qualitative import make_qualitative_evaluation_figure
-from lib.models.vae import TCVAE
-
 import os
 import random
-from os.path import exists
 from os import mkdir
+from os.path import exists
+
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+import tensorflow as tf
+
+from lib.evaluation.qualitative import make_qualitative_evaluation_figure
+from lib.models.vae import TCVAE
 
 # SET RANDOM SEEDS
 SEED = 12

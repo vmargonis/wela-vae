@@ -1,7 +1,7 @@
-from keras.models import Model
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import seaborn as sns
+from keras.models import Model
 
 sns.set()
 sns.set_style("white")

@@ -1,14 +1,16 @@
+from typing import Dict
+
 import tensorflow as tf
 from keras import backend as K
-from keras.optimizers import Adagrad, RMSprop, Adam, SGD
+from keras.optimizers import SGD, Adagrad, Adam, RMSprop
+
 from lib.models.losses import (
-    gaussian_loss,
     bernoulli_loss,
     compute_covariance_mean,
     compute_covariance_z,
     dip_vae_regularizer,
+    gaussian_loss,
 )
-from typing import Dict
 
 
 def get_reconstruction_loss(

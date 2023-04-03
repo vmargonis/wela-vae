@@ -1,13 +1,14 @@
-import numpy as np
-import tensorflow as tf
-import matplotlib.pyplot as plt
-import seaborn as sns
-from keras import backend as K
-from lib.models.welavae import WeLaTCVae
-from lib.evaluation.qualitative import quality_welavae
-from os.path import exists
 from os import mkdir
+from os.path import exists
 
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+import tensorflow as tf
+from keras import backend as K
+
+from lib.evaluation.qualitative import quality_welavae
+from lib.models.welavae import WeLaTCVae
 
 # Session settings to avoid pre allocating all the GPU memory
 config = tf.ConfigProto()

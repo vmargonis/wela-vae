@@ -1,6 +1,7 @@
-from keras import backend as K
-import tensorflow as tf
 import math
+
+import tensorflow as tf
+from keras import backend as K
 
 
 def kl_divergence(

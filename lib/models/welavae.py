@@ -1,11 +1,12 @@
 from keras.models import Model
-from lib.models.layers import reparameterize, dense_encoder_with_labels, dense_decoder
+
+from lib.models.layers import dense_decoder, dense_encoder_with_labels, reparameterize
 from lib.models.losses import kl_divergence, total_correlation
 from lib.models.utils import (
     add_optimizer,
-    get_reconstruction_loss,
-    get_label_loss,
     get_dip_vae_regularizer,
+    get_label_loss,
+    get_reconstruction_loss,
 )
 
 

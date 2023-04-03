@@ -1,9 +1,10 @@
+from typing import Dict, Tuple
+
 import tensorflow as tf
 from keras import backend as K
-from keras.models import Model
-from keras.layers import Dense, Input, Lambda, concatenate
 from keras.initializers.initializers_v2 import GlorotUniform
-from typing import Dict, Tuple
+from keras.layers import Dense, Input, Lambda, concatenate
+from keras.models import Model
 
 
 def _reparameterization_trick(args: Tuple[tf.Tensor, tf.Tensor]) -> tf.Tensor:

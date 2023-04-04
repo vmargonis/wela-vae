@@ -1,15 +1,14 @@
-[tool.flake8]
-ignore = ['E203', 'W503']
-max-line-length = 88
-exclude = ["wela-vae-env", "legacy"]
+[tool.pycln]
+all = true
+extend_exclude = ["wela-vae-env/*", "legacy/*"]
 
 [tool.black]
 line-length = 88
-target_version = ['py39']
+target-version = ['py39']
+extend-exclude = ["wela-vae-env/*", "legacy/*"]
 
 [tool.isort]
 py_version = 39
 line_length = 88
 profile = "black"
-skip = [".gitignore"]
-skip_glob = ["wela-vae-env/*", "legacy/*"]
+extend_skip_glob = ["wela-vae-env/*", "legacy/*"]

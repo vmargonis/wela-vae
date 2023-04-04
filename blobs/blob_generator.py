@@ -4,7 +4,6 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from tqdm import tqdm
 
 sns.set()
 sns.set_style("white")
@@ -44,11 +43,8 @@ def embed_image_in_canvas(
 ) -> np.array:
     """Places a square image inside a black canvas of specified size.
     (pos_x, pos_y) references the center of the source image in the canvas.
-    Source image must be of odd dimensions.
+    Source image must be square and of odd dimensions.
     """
-
-    assert image.shape[0] == image.shape[1]
-    assert image.shape[0] % 2 == 1
 
     img_size = image.shape[0]
     padding = (img_size - 1) // 2
@@ -76,7 +72,7 @@ def generate_blobs() -> None:
     ground_truth_factors = np.zeros((N_SAMPLES, 2))
 
     num = 0
-    for x in tqdm(range(IMAGE_SIZE)):
+    for x in range(IMAGE_SIZE):
         for y in range(IMAGE_SIZE):
             blobset64[num, :, :] = embed_image_in_canvas(BLOB, IMAGE_SIZE, x, y)
             ground_truth_factors[num, :] = np.array([x, y])
@@ -91,7 +87,7 @@ def generate_blobs() -> None:
 
 def generate_polar_labels() -> None:
     """Generates polar labels for each image."""
-    for label_resolution in tqdm(range(2, 11)):
+    for label_resolution in range(2, 11):
         angle_labels = np.zeros((N_SAMPLES, label_resolution))
         distance_labels = np.zeros((N_SAMPLES, label_resolution))
 
@@ -115,11 +111,6 @@ def generate_polar_labels() -> None:
         # small correction: assign to label 0 when k=0 and k * angle_step = phi
         problematic_ids = angle_labels.sum(axis=1) == 0
         angle_labels[problematic_ids, 0] = 1
-
-        assert (
-            angle_labels.sum(axis=1).min() == angle_labels.sum(axis=1).max()
-        )  # min=max=1; labels are one-hot
-        assert angle_labels.sum(axis=1).min() == angle_labels.sum(axis=1).max()
 
         np.savez_compressed(
             f"{DATA_PATH}/blobs64_anglelabels_res{label_resolution}", angle_labels

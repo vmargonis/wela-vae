@@ -17,7 +17,7 @@ class BaseVAE:
         self.reparam = reparameterize(config)
         self.decoder = dense_decoder(config)
         self._z = self.reparam(self.encoder(self._in))
-        self._out = self.decoder(self.reparam(self.encoder(self._in)))
+        self._out = self.decoder(self._z)
         self.vae = Model(self._in, self._out)
 
 

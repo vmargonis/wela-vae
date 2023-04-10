@@ -10,8 +10,6 @@
 .png
 
 legacy/
-blobs/data
-blobs/images
-
+blobs/
 results/
 logs/*

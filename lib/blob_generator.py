@@ -8,11 +8,11 @@ import seaborn as sns
 sns.set()
 sns.set_style("white")
 
-DATA_PATH = "data"
+DATA_PATH = "blobs/data"
 if not os.path.exists(DATA_PATH):
     os.mkdir(DATA_PATH)
 
-IMAGE_PATH = "images"
+IMAGE_PATH = "blobs/images"
 if not os.path.exists(IMAGE_PATH):
     os.mkdir(IMAGE_PATH)
 

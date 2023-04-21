@@ -82,7 +82,7 @@ def make_qualitative_evaluation_figure(
         mean_vec, latent_dim, image_resolution, samples_per_position
     )
 
-    # TWO FIRST ROWS OF FIGURE (ORIGINALS AND RECONSTRUCTIONS)
+    # two first rows of figure: originals and reconstructions
     np.random.seed(42)
     recon_ids = np.random.choice(n_samples, 10)
     test_images = dataset[recon_ids]
@@ -118,11 +118,11 @@ def make_qualitative_evaluation_figure(
             ax.yaxis.set_label_position("right")
             ax.set_ylabel("recon.", fontsize=22, rotation=0, ha="left", va="center")
 
-    # CONSTRUCT THE REST OF THE FIGURE
+    # construct rest of figure
     mean_variances = np.mean(np.exp(log_var_vec), axis=0)
     sorted_idx = np.argsort(mean_variances)
 
-    # PICK late_dim images for traversals:
+    # pick late_dim images for traversals:
     traverse_ids = np.array(latent_dim * [2080])
     # traverse_ids = np.random.choice(num_samples, late_dim)
     originals = dataset[traverse_ids]

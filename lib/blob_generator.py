@@ -5,16 +5,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
+from lib.config import Config
+
 sns.set()
 sns.set_style("white")
 
-DATA_PATH = "blobs/data"
-if not os.path.exists(DATA_PATH):
-    os.mkdir(DATA_PATH)
-
-IMAGE_PATH = "blobs/images"
-if not os.path.exists(IMAGE_PATH):
-    os.mkdir(IMAGE_PATH)
+for sub_path in ["data", "images"]:
+    if not os.path.exists(f"{Config.blobs_path}/{sub_path}"):
+        os.mkdir(f"{Config.blobs_path}/{sub_path}")
 
 IMAGE_SIZE = 64  # all images are 64x64 pixels
 N_SAMPLES = IMAGE_SIZE**2
@@ -62,7 +60,7 @@ def make_example_image() -> None:
     plt.figure(figsize=(5, 5))
     plt.imshow(example, cmap="gray")
     plt.title("Blob example")
-    plt.savefig(f"{IMAGE_PATH}/sample64.png", bbox_inches="tight")
+    plt.savefig(f"{Config.blobs_path}/images/sample64.png", bbox_inches="tight")
     return None
 
 
@@ -78,8 +76,11 @@ def generate_blobs() -> None:
             ground_truth_factors[num, :] = np.array([x, y])
             num += 1
 
-    np.savez_compressed(f"{DATA_PATH}/blobs64", blobset64)
-    np.savez_compressed(f"{DATA_PATH}/blobs64_ground_truth", ground_truth_factors)
+    np.savez_compressed(f"{Config.blobs_path}/data/blobs64", blobset64)
+    np.savez_compressed(
+        f"{Config.blobs_path}/data/blobs64_ground_truth",
+        ground_truth_factors,
+    )
 
     print(f"Dataset generated, size={blobset64.shape}")
     return None
@@ -113,10 +114,12 @@ def generate_polar_labels() -> None:
         angle_labels[problematic_ids, 0] = 1
 
         np.savez_compressed(
-            f"{DATA_PATH}/blobs64_anglelabels_res{label_resolution}", angle_labels
+            f"{Config.blobs_path}/data/blobs64_anglelabels_res{label_resolution}",
+            angle_labels,
         )
         np.savez_compressed(
-            f"{DATA_PATH}/blobs64_distlabels_res{label_resolution}", distance_labels
+            f"{Config.blobs_path}/data/blobs64_distlabels_res{label_resolution}",
+            distance_labels,
         )
 
         # plot angle/distance labels + export images
@@ -125,7 +128,8 @@ def generate_polar_labels() -> None:
         plt.imshow(angle_map, cmap="gray")
         plt.title(f"Angle labels, res={label_resolution}")
         plt.savefig(
-            f"{IMAGE_PATH}/anglelabels_res{label_resolution}.png", bbox_inches="tight"
+            f"{Config.blobs_path}/images/anglelabels_res{label_resolution}.png",
+            bbox_inches="tight",
         )
 
         dis_map = distance_labels.argmax(axis=1).reshape(IMAGE_SIZE, IMAGE_SIZE)
@@ -133,13 +137,14 @@ def generate_polar_labels() -> None:
         plt.imshow(dis_map, cmap="gray")
         plt.title(f"Distance labels, res={label_resolution}")
         plt.savefig(
-            f"{IMAGE_PATH}/distlabels_res{label_resolution}.png", bbox_inches="tight"
+            f"{Config.blobs_path}/images/distlabels_res{label_resolution}.png",
+            bbox_inches="tight",
         )
 
     print("Labels generated.")
 
 
-def generate_dataset() -> None:
+def main() -> None:
     """Main generating function."""
     make_example_image()
     generate_blobs()
@@ -148,4 +153,4 @@ def generate_dataset() -> None:
 
 
 if __name__ == "__main__":
-    generate_dataset()
+    main()

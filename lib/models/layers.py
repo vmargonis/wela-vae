@@ -8,7 +8,7 @@ from keras.models import Model
 
 
 def _reparameterization_trick(args: Tuple[tf.Tensor, tf.Tensor]) -> tf.Tensor:
-    """Reparameterization trick:  z = mu + eps*sigma, eps~N(0,1)
+    """Reparameterization trick:  z = mu + eps*sigma, eps~N(0,1).
 
     Parameters
     ----------
@@ -52,51 +52,39 @@ def dense_encoder(
 ) -> Tuple[Input, Dense, Dense, Model]:
     """Dense encoder layers."""
 
-    # glorot weight initializer
-    w_init = GlorotUniform(seed=config["weight_seed"])
-
-    # input placeholder
+    w_seed = config["weight_seed"]
     input_vector = Input(shape=(config["initial_dim"],))
-
-    # hidden layer(s)
     num_layers = len(config["encoder"]["units"])
 
-    # First hidden is connected to input
     hidden = Dense(
         units=config["encoder"]["units"][0],
         activation=config["encoder"]["activation"][0],
-        kernel_initializer=w_init,
+        kernel_initializer=GlorotUniform(seed=w_seed),
     )(input_vector)
 
-    # rest of layers connected to each other
     for i in range(1, num_layers):
         hidden = Dense(
             units=config["encoder"]["units"][i],
             activation=config["encoder"]["activation"][i],
-            kernel_initializer=w_init,
+            kernel_initializer=GlorotUniform(seed=w_seed + i),
         )(hidden)
 
-    # Mean Layer (Latent vector - lib representation)
+    # Latent vector - representations
     mean = Dense(
         units=config["latent_dim"],
         activation=config["encoder"]["output_activation"],
-        kernel_initializer=w_init,
+        kernel_initializer=GlorotUniform(seed=w_seed - 1),
         name="encoder_mean",
     )(hidden)
 
-    # Log var layer
     log_var = Dense(
         units=config["latent_dim"],
         activation=config["encoder"]["output_activation"],
-        kernel_initializer=w_init,
+        kernel_initializer=GlorotUniform(seed=w_seed - 2),
         name="encoder_log_sigma_squared",
     )(hidden)
 
-    encoder = Model(
-        inputs=input_vector,
-        outputs=[mean, log_var],
-        name="encoder",
-    )
+    encoder = Model(inputs=input_vector, outputs=[mean, log_var], name="encoder")
 
     return input_vector, mean, log_var, encoder
 
@@ -106,47 +94,40 @@ def dense_encoder_with_labels(
 ) -> Tuple[Input, Input, Input, Dense, Dense, Model]:
     """Dense encoder layers with two extra inputs-labels. Used by WeLa-VAE models."""
 
-    # glorot weight initializer
-    w_init = GlorotUniform(seed=config["weight_seed"])
+    w_seed = config["weight_seed"]
 
-    # input placeholders
     input_vector = Input(shape=(config["initial_dim"],))
     label_1 = Input(shape=(config["label_dim"],))
     label_2 = Input(shape=(config["label_dim"],))
-    # concatenate
     combined_input = concatenate([input_vector, label_1, label_2])
 
-    # hidden layer(s)
     num_layers = len(config["encoder"]["units"])
 
-    # First hidden is connected to input
     hidden = Dense(
         units=config["encoder"]["units"][0],
         activation=config["encoder"]["activation"][0],
-        kernel_initializer=w_init,
+        kernel_initializer=GlorotUniform(seed=w_seed),
     )(combined_input)
 
-    # rest of layers connected to each other
     for i in range(1, num_layers):
         hidden = Dense(
             units=config["encoder"]["units"][i],
             activation=config["encoder"]["activation"][i],
-            kernel_initializer=w_init,
+            kernel_initializer=GlorotUniform(seed=w_seed + i),
         )(hidden)
 
-    # Mean Layer (Latent vector - lib representation)
+    # Latent vector - lib representations
     mean = Dense(
         units=config["latent_dim"],
         activation=config["encoder"]["output_activation"],
-        kernel_initializer=w_init,
+        kernel_initializer=GlorotUniform(seed=w_seed - 1),
         name="encoder_mean",
     )(hidden)
 
-    # Log var layer
     log_var = Dense(
         units=config["latent_dim"],
         activation=config["encoder"]["output_activation"],
-        kernel_initializer=w_init,
+        kernel_initializer=GlorotUniform(seed=w_seed - 2),
         name="encoder_log_sigma_squared",
     )(hidden)
 
@@ -165,32 +146,27 @@ def dense_decoder(config: Dict) -> Model:
     label vector.
     """
 
-    # glorot weight initializer
-    w_init = GlorotUniform(seed=config["weight_seed"])
-
+    w_seed = config["weight_seed"]
     z_sample = Input(shape=(config["latent_dim"],))
+    num_layers = len(config["decoder"]["units"])
 
-    # First hidden is connected to input
     hidden = Dense(
         units=config["decoder"]["units"][0],
         activation=config["decoder"]["activation"][0],
-        kernel_initializer=w_init,
+        kernel_initializer=GlorotUniform(seed=w_seed + num_layers + 1),
     )(z_sample)
-
-    # hidden layer(s) / rest of layers connected to each other
-    num_layers = len(config["decoder"]["units"])
 
     for i in range(1, num_layers):
         hidden = Dense(
             units=config["decoder"]["units"][i],
             activation=config["decoder"]["activation"][i],
-            kernel_initializer=w_init,
+            kernel_initializer=GlorotUniform(seed=w_seed + num_layers + 1 + i),
         )(hidden)
 
     output_vector = Dense(
         units=config["initial_dim"],
         activation=config["decoder"]["output_activation"],
-        kernel_initializer=w_init,
+        kernel_initializer=GlorotUniform(seed=config["weight_seed"] - 3),
         name="output_vector",
     )(hidden)
 
@@ -198,14 +174,14 @@ def dense_decoder(config: Dict) -> Model:
         label_1_out = Dense(
             units=config["label_dim"],
             activation="softmax",
-            kernel_initializer=w_init,
+            kernel_initializer=GlorotUniform(seed=config["weight_seed"] - 4),
             name="label_1_output",
         )(hidden)
 
         label_2_out = Dense(
             units=config["label_dim"],
             activation="softmax",
-            kernel_initializer=w_init,
+            kernel_initializer=GlorotUniform(seed=config["weight_seed"] - 5),
             name="label_2_output",
         )(hidden)
 
@@ -214,10 +190,5 @@ def dense_decoder(config: Dict) -> Model:
     else:
         outputs = output_vector
 
-    decoder = Model(
-        inputs=z_sample,
-        outputs=outputs,
-        name="decoder",
-    )
-
+    decoder = Model(inputs=z_sample, outputs=outputs, name="decoder")
     return decoder

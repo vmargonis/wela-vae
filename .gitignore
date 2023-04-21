@@ -5,6 +5,7 @@
 *.py[cod]
 .ipynb_checkpoints
 *.ipynb
+*local_settings.py
 .npz
 .pdf
 .png
@@ -12,4 +13,3 @@
 legacy/
 blobs/
 results/
-logs/*

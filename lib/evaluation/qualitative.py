@@ -31,9 +31,9 @@ def _traverse(
             aux[i, 0] = interval[j]
 
             if is_wela:
-                [traversals[i, j, :], _, _] = decoder.predict(aux.T)
+                [traversals[i, j, :], _, _] = decoder.predict(aux.T, verbose=0)
             else:
-                traversals[i, j, :] = decoder.predict(aux.T)
+                traversals[i, j, :] = decoder.predict(aux.T, verbose=0)
 
     return traversals
 
@@ -88,9 +88,9 @@ def make_qualitative_evaluation_figure(
     test_images = dataset[recon_ids]
     test_means = mean_vec[recon_ids]
     if is_wela:
-        [test_recons, _, _] = decoder.predict(test_means)
+        [test_recons, _, _] = decoder.predict(test_means, verbose=0)
     else:
-        test_recons = decoder.predict(test_means)
+        test_recons = decoder.predict(test_means, verbose=0)
 
     plt.figure(figsize=(15, 5 + (latent_dim - 2) * 1.25))
     for col in range(10):
@@ -173,6 +173,6 @@ def make_qualitative_evaluation_figure(
 
     ax.autoscale(enable=True)
     plt.subplots_adjust(wspace=0.05, hspace=0.05)
-    plt.savefig(output_directory + f"/quality_{figure_name}.pdf", bbox_inches="tight")
+    plt.savefig(output_directory + f"/quality_{figure_name}.png", bbox_inches="tight")
 
     return None

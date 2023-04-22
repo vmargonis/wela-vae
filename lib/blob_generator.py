@@ -10,9 +10,9 @@ from lib.config import Config
 sns.set()
 sns.set_style("white")
 
-for sub_path in ["data", "images"]:
-    if not os.path.exists(f"{Config.blobs_path}/{sub_path}"):
-        os.mkdir(f"{Config.blobs_path}/{sub_path}")
+for sub_dir in ["data", "images"]:
+    if not os.path.exists(f"{Config.blobs_path}/{sub_dir}"):
+        os.mkdir(f"{Config.blobs_path}/{sub_dir}")
 
 IMAGE_SIZE = 64  # all images are 64x64 pixels
 N_SAMPLES = IMAGE_SIZE**2

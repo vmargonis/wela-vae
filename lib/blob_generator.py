@@ -7,14 +7,7 @@ import seaborn as sns
 
 from lib.config import Config
 
-sns.set()
-sns.set_style("white")
-
-for sub_dir in ["data", "images"]:
-    if not os.path.exists(f"{Config.blobs_path}/{sub_dir}"):
-        os.mkdir(f"{Config.blobs_path}/{sub_dir}")
-
-IMAGE_SIZE = 64  # all images are 64x64 pixels
+IMAGE_SIZE = 64  # images are 64x64 pixels
 N_SAMPLES = IMAGE_SIZE**2
 
 DISK = cv.circle(
@@ -31,6 +24,16 @@ BLOB = cv.GaussianBlur(
     ksize=(21, 21),
     sigmaX=0,
 )
+
+
+def make_directories() -> None:
+    """Makes subdirectories of `blobs_path` to store data and examples."""
+
+    for sub_dir in ["data", "images"]:
+        par_dir = f"{Config.blobs_path}/{sub_dir}"
+        os.mkdir(par_dir) if not os.path.exists(par_dir) else None
+
+    return None
 
 
 def embed_image_in_canvas(
@@ -56,7 +59,10 @@ def embed_image_in_canvas(
 
 def make_example_image() -> None:
     """Plot a blob example."""
+
     example = embed_image_in_canvas(BLOB, 64, 15, 15)
+
+    sns.set_style("white")
     plt.figure(figsize=(5, 5))
     plt.imshow(example, cmap="gray")
     plt.title("Blob example")
@@ -66,6 +72,7 @@ def make_example_image() -> None:
 
 def generate_blobs() -> None:
     """Generates blob images."""
+
     blobset64 = np.zeros((N_SAMPLES, IMAGE_SIZE, IMAGE_SIZE))
     ground_truth_factors = np.zeros((N_SAMPLES, 2))
 
@@ -88,6 +95,7 @@ def generate_blobs() -> None:
 
 def generate_polar_labels() -> None:
     """Generates polar labels for each image."""
+
     for label_resolution in range(2, 11):
         angle_labels = np.zeros((N_SAMPLES, label_resolution))
         distance_labels = np.zeros((N_SAMPLES, label_resolution))
@@ -122,6 +130,8 @@ def generate_polar_labels() -> None:
             distance_labels,
         )
 
+        sns.set_style("white")
+
         # plot angle/distance labels + export images
         angle_map = angle_labels.argmax(axis=1).reshape(IMAGE_SIZE, IMAGE_SIZE)
         plt.figure(figsize=(5, 5))
@@ -146,9 +156,12 @@ def generate_polar_labels() -> None:
 
 def main() -> None:
     """Main generating function."""
+
+    make_directories()
     make_example_image()
     generate_blobs()
     generate_polar_labels()
+
     return None
 
 

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from local_settings import BLOBS_PATH, RESULTS_PATH
+from lib.local_settings import BLOBS_PATH, RESULTS_PATH
 
 
 class _Config:

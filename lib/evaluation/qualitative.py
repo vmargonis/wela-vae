@@ -92,6 +92,8 @@ def make_qualitative_evaluation_figure(
     else:
         test_recons = decoder.predict(test_means, verbose=0)
 
+    sns.set_style("white")
+
     plt.figure(figsize=(15, 5 + (latent_dim - 2) * 1.25))
     for col in range(10):
         # display original
@@ -173,6 +175,6 @@ def make_qualitative_evaluation_figure(
 
     ax.autoscale(enable=True)
     plt.subplots_adjust(wspace=0.05, hspace=0.05)
-    plt.savefig(output_directory + f"/quality_{figure_name}.png", bbox_inches="tight")
+    plt.savefig(output_directory + f"/qa_{figure_name}.png", bbox_inches="tight")
 
     return None

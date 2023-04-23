@@ -23,7 +23,6 @@ class BetaVAE(BaseVAE):
     def __init__(self, config):
         super().__init__(config)
 
-        # string representation
         self.str_repr = (
             f"betavae"
             f"_L{config['latent_dim']}"
@@ -31,7 +30,6 @@ class BetaVAE(BaseVAE):
             f"_wseed{config['weight_seed']}"
         )
 
-        # Add Loss
         self.vae.add_loss(self.beta_vae_loss(config))
 
     def beta_vae_loss(self, config):
@@ -50,7 +48,6 @@ class TCVAE(BaseVAE):
     def __init__(self, config):
         super().__init__(config)
 
-        # string representation
         self.str_repr = (
             f"tcvae"
             f"_L{config['latent_dim']}"
@@ -58,7 +55,6 @@ class TCVAE(BaseVAE):
             f"_wseed{config['weight_seed']}"
         )
 
-        # Add Loss / Optimizer
         self.vae.add_loss(self.tcvae_loss(config))
 
     def tcvae_loss(self, config):
@@ -79,7 +75,6 @@ class DIPVAE(BaseVAE):
     def __init__(self, config):
         super().__init__(config)
 
-        # string representation
         self.str_repr = (
             f"dipvae"
             f"_type{config['dip_vae_type']}"
@@ -89,7 +84,6 @@ class DIPVAE(BaseVAE):
             f"_wseed{config['weight_seed']}"
         )
 
-        # Add Loss / Optimizer
         self.vae.add_loss(self.dip_vae_loss(config))
 
     def dip_vae_loss(self, config):

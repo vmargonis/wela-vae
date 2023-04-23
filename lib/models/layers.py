@@ -66,21 +66,21 @@ def dense_encoder(
         hidden = Dense(
             units=config["encoder"]["units"][i],
             activation=config["encoder"]["activation"][i],
-            kernel_initializer=GlorotUniform(seed=w_seed + i),
+            kernel_initializer=GlorotUniform(seed=w_seed),
         )(hidden)
 
     # Latent vector - representations
     mean = Dense(
         units=config["latent_dim"],
         activation=config["encoder"]["output_activation"],
-        kernel_initializer=GlorotUniform(seed=w_seed - 1),
+        kernel_initializer=GlorotUniform(seed=w_seed),
         name="encoder_mean",
     )(hidden)
 
     log_var = Dense(
         units=config["latent_dim"],
         activation=config["encoder"]["output_activation"],
-        kernel_initializer=GlorotUniform(seed=w_seed - 2),
+        kernel_initializer=GlorotUniform(seed=w_seed),
         name="encoder_log_sigma_squared",
     )(hidden)
 
@@ -113,21 +113,21 @@ def dense_encoder_with_labels(
         hidden = Dense(
             units=config["encoder"]["units"][i],
             activation=config["encoder"]["activation"][i],
-            kernel_initializer=GlorotUniform(seed=w_seed + i),
+            kernel_initializer=GlorotUniform(seed=w_seed),
         )(hidden)
 
     # Latent vector - lib representations
     mean = Dense(
         units=config["latent_dim"],
         activation=config["encoder"]["output_activation"],
-        kernel_initializer=GlorotUniform(seed=w_seed - 1),
+        kernel_initializer=GlorotUniform(seed=w_seed),
         name="encoder_mean",
     )(hidden)
 
     log_var = Dense(
         units=config["latent_dim"],
         activation=config["encoder"]["output_activation"],
-        kernel_initializer=GlorotUniform(seed=w_seed - 2),
+        kernel_initializer=GlorotUniform(seed=w_seed),
         name="encoder_log_sigma_squared",
     )(hidden)
 
@@ -141,10 +141,7 @@ def dense_encoder_with_labels(
 
 
 def dense_decoder(config: Dict) -> Model:
-    """Dense decoder layers. If config["label_dim"] is not None, which indicates
-    a WeLa-VAE architecture, the decoder also outputs two extra layers, one for each
-    label vector.
-    """
+    """Dense decoder layers."""
 
     w_seed = config["weight_seed"]
     z_sample = Input(shape=(config["latent_dim"],))
@@ -153,42 +150,69 @@ def dense_decoder(config: Dict) -> Model:
     hidden = Dense(
         units=config["decoder"]["units"][0],
         activation=config["decoder"]["activation"][0],
-        kernel_initializer=GlorotUniform(seed=w_seed + num_layers + 1),
+        kernel_initializer=GlorotUniform(seed=w_seed),
     )(z_sample)
 
     for i in range(1, num_layers):
         hidden = Dense(
             units=config["decoder"]["units"][i],
             activation=config["decoder"]["activation"][i],
-            kernel_initializer=GlorotUniform(seed=w_seed + num_layers + 1 + i),
+            kernel_initializer=GlorotUniform(seed=w_seed),
+        )(hidden)
+
+    output = Dense(
+        units=config["initial_dim"],
+        activation=config["decoder"]["output_activation"],
+        kernel_initializer=GlorotUniform(seed=config["weight_seed"]),
+        name="output_vector",
+    )(hidden)
+
+    decoder = Model(inputs=z_sample, outputs=output, name="decoder")
+    return decoder
+
+
+def dense_decoder_with_labels(config: Dict) -> Model:
+    """Dense decoder layers with two extra outputs-labels. Used by WeLa-VAE models."""
+
+    w_seed = config["weight_seed"]
+    z_sample = Input(shape=(config["latent_dim"],))
+    num_layers = len(config["decoder"]["units"])
+
+    hidden = Dense(
+        units=config["decoder"]["units"][0],
+        activation=config["decoder"]["activation"][0],
+        kernel_initializer=GlorotUniform(seed=w_seed),
+    )(z_sample)
+
+    for i in range(1, num_layers):
+        hidden = Dense(
+            units=config["decoder"]["units"][i],
+            activation=config["decoder"]["activation"][i],
+            kernel_initializer=GlorotUniform(seed=w_seed),
         )(hidden)
 
     output_vector = Dense(
         units=config["initial_dim"],
         activation=config["decoder"]["output_activation"],
-        kernel_initializer=GlorotUniform(seed=config["weight_seed"] - 3),
+        kernel_initializer=GlorotUniform(seed=w_seed),
         name="output_vector",
     )(hidden)
 
-    if config["label_dim"]:
-        label_1_out = Dense(
-            units=config["label_dim"],
-            activation="softmax",
-            kernel_initializer=GlorotUniform(seed=config["weight_seed"] - 4),
-            name="label_1_output",
-        )(hidden)
+    label_1_out = Dense(
+        units=config["label_dim"],
+        activation="softmax",
+        kernel_initializer=GlorotUniform(seed=w_seed),
+        name="label_1_output",
+    )(hidden)
 
-        label_2_out = Dense(
-            units=config["label_dim"],
-            activation="softmax",
-            kernel_initializer=GlorotUniform(seed=config["weight_seed"] - 5),
-            name="label_2_output",
-        )(hidden)
+    label_2_out = Dense(
+        units=config["label_dim"],
+        activation="softmax",
+        kernel_initializer=GlorotUniform(seed=w_seed),
+        name="label_2_output",
+    )(hidden)
 
-        outputs = [output_vector, label_1_out, label_2_out]
-
-    else:
-        outputs = output_vector
+    outputs = [output_vector, label_1_out, label_2_out]
 
     decoder = Model(inputs=z_sample, outputs=outputs, name="decoder")
     return decoder

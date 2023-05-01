@@ -1,0 +1,15 @@
+.idea
+.git
+
+**/__pycache__/
+*.py[cod]
+.ipynb_checkpoints
+*.ipynb
+*local_settings.py
+.npz
+.pdf
+.png
+
+legacy/
+blobs/
+results/

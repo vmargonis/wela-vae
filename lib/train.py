@@ -17,10 +17,18 @@ from lib.models.vae import DIPVAE, TCVAE, BetaVAE
 from lib.models.welavae import WeLaBetaVAE, WeLaDIPVAE, WeLaTCVAE
 
 
+def _load_configs() -> Tuple[Dict, Dict]:
+    """Load train and vae configs from yaml file."""
+
+    with open("lib/train_config.yaml", "r") as file:
+        conf_dict = yaml.safe_load(file)
+
+    return conf_dict["train"], conf_dict["vae"]
+
+
 def _make_directories(vae_type: str, is_wela: bool) -> Tuple[str, str]:
     """Makes results directories for the model."""
 
-    # ToDo: can qa_dir and hist_dir be make directly?
     for sub_dir in ["eval", "history"]:
         par_dir = f"{Config.results_path}/{sub_dir}"
         os.mkdir(par_dir) if not os.path.exists(par_dir) else None
@@ -34,24 +42,28 @@ def _make_directories(vae_type: str, is_wela: bool) -> Tuple[str, str]:
     return qa_dir, hist_dir
 
 
-def _load_data() -> np.array:
-    """Load Blobs dataset."""
+def _load_data(config: Dict) -> Tuple[np.array, np.array, np.array]:
+    """Load Blobs dataset and angle/distance labels, with one-hot dimension
+    specified in the yaml config.
+    """
 
-    # ToDo: load labels as well
     dataset_zip = np.load(f"{Config.blobs_path}/data/blobs64.npz")
     blobs = dataset_zip["arr_0"]
+    blobs = blobs.reshape((len(blobs), np.prod(blobs.shape[1:])))
+
+    # label one-hot dimension
+    ldim = config["label_dim"]
+
+    # load angle labels
+    label_zip = np.load(f"{Config.blobs_path}/data/blobs64_anglelabels_res{ldim}.npz")
+    angle_labels = label_zip["arr_0"]
+
+    # load distance labels
+    label_zip = np.load(f"{Config.blobs_path}/data/blobs64_distlabels_res{ldim}.npz")
+    dist_labels = label_zip["arr_0"]
 
     # Flatten for training
-    return blobs.reshape((len(blobs), np.prod(blobs.shape[1:])))
-
-
-def _load_configs() -> Tuple[Dict, Dict]:
-    """Load train and vae configs from yaml file."""
-
-    with open("lib/train_config.yaml", "r") as file:
-        conf_dict = yaml.safe_load(file)
-
-    return conf_dict["train"], conf_dict["vae"]
+    return blobs, angle_labels, dist_labels
 
 
 def _add_optimizer(config: Dict):
@@ -72,38 +84,47 @@ def _add_optimizer(config: Dict):
     return optimizer_class(learning_rate=learning_rate)
 
 
-def _train(
-    data: np.array,
-    vae_type: str,
-    is_wela: bool = False,
-) -> None:
-    """Training function."""
+def _select_init_vae(vae_type: str, is_wela: bool, config: Dict):
+    """VAE type selection and initialization."""
 
     if vae_type not in ["betavae", "tcvae", "dipvae"]:
         raise ValueError(
             f"Unkown vae type {vae_type}. Choose from: 'betavae', 'tcvae', 'dipvae'"
         )
 
+    if is_wela:
+        vae = (
+            WeLaBetaVAE(config)
+            if vae_type == "betavae"
+            else WeLaTCVAE(config)
+            if vae_type == "tcvae"
+            else WeLaDIPVAE(config)
+        )
+    else:
+        vae = (
+            BetaVAE(config)
+            if vae_type == "betavae"
+            else TCVAE(config)
+            if vae_type == "tcvae"
+            else DIPVAE(config)
+        )
+
+    return vae
+
+
+def _train(
+    vae_type: str,
+    is_wela: bool = False,
+) -> None:
+    """Training function."""
+
     qa_dir, hist_dir = _make_directories(vae_type, is_wela)
     train_config, vae_config = _load_configs()
 
-    if is_wela:
-        model = (
-            WeLaBetaVAE(vae_config)
-            if vae_type == "betavae"
-            else WeLaTCVAE(vae_config)
-            if vae_type == "tcvae"
-            else WeLaDIPVAE(vae_config)
-        )
-    else:
-        model = (
-            BetaVAE(vae_config)
-            if vae_type == "betavae"
-            else TCVAE(vae_config)
-            if vae_type == "tcvae"
-            else DIPVAE(vae_config)
-        )
+    blobs, angle_labels, dist_labels = _load_data(vae_config)
+    data = [blobs, angle_labels, dist_labels] if is_wela else blobs
 
+    model = _select_init_vae(vae_type, is_wela, vae_config)
     model.vae.compile(optimizer=_add_optimizer(train_config))
 
     # TRAINING
@@ -124,7 +145,7 @@ def _train(
             cooldown=0,
             min_lr=train_config["optimizer"]["learning_rate"] * 0.1,
         )
-        # ToDo: when is_wela=True data must contain three vectors in fit
+
         history = model.vae.fit(
             x=data,
             y=None,
@@ -143,14 +164,13 @@ def _train(
         plt.savefig(f"{hist_dir}/hist_{model.str_repr}.png")
 
     except KeyboardInterrupt:
-        print("Training interrupted.")
+        print("Training interrupted. Proceeding to evaluation.")
 
     finally:
-        # ToDo: when is_wela=True data must contain three vectors in predict
         means, log_vars = model.encoder.predict(data, verbose=0)
 
         make_qualitative_evaluation_figure(
-            dataset=data,
+            dataset=(data[0] if is_wela else data),
             mean_vec=means,
             log_var_vec=log_vars,
             decoder=model.decoder,
@@ -158,26 +178,25 @@ def _train(
             figure_name=model.str_repr,
             output_directory=qa_dir,
         )
-
         print("Saved qualitative evaluation figure.")
 
     return None
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-t",
         "--type",
-        help="VAE type selection: betavae, tcvae or dipvae.",
+        help="VAE type selection.",
+        choices=["betavae", "tcvae", "dipvae"],
         required=True,
     )
     parser.add_argument(
         "-w",
         "--wela",
-        type=bool,
-        help="Boolean flag, whether to use the WeLa variant. Default is False.",
-        default=False,
+        help="If provided, WeLa variant will be used. Defaults to False.",
+        action="store_true",
     )
     args = parser.parse_args()
 
@@ -188,8 +207,7 @@ def main():
     np.random.seed(seed)
     tf.random.set_seed(seed)
 
-    x_train = _load_data()
-    _train(data=x_train, vae_type=args.type, is_wela=args.wela)
+    _train(vae_type=args.type, is_wela=args.wela)
 
     return None
 

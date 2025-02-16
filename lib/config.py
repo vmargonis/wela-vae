@@ -1,11 +1,10 @@
 from pathlib import Path
 
-from lib.local_settings import BLOBS_PATH, RESULTS_PATH
-
 
 class _Config:
     def __init__(self, project="wela-vae"):
         self.project_name = project
+        self.project_path = Path(__file__).parent.parent
 
     @staticmethod
     def create(path):
@@ -14,12 +13,12 @@ class _Config:
 
     @property
     def blobs_path(self):
-        path = Path(BLOBS_PATH)
+        path = self.project_path / "blobs"
         return self.create(path)
 
     @property
     def results_path(self):
-        path = Path(RESULTS_PATH)
+        path = self.project_path / "results"
         return self.create(path)
 
 
